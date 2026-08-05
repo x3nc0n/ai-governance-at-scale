@@ -286,6 +286,7 @@ output aiServicesName string = aiServices.name
 output aiServicesEndpoint string = aiServices.properties.endpoint
 output containerRegistryName string = containerRegistry.name
 output containerRegistryLoginServer string = containerRegistry.properties.loginServer
+output containerRegistryAdminUsername string = containerRegistry.listCredentials().username
 output aiProjectName string = createFoundryProject ? aiProject.name : ''
 output keyVaultName string = keyVault.name
 output keyVaultResourceId string = keyVault.id

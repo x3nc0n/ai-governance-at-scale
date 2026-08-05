@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "14309244770050105508"
+      "templateHash": "16558448810496283682"
     }
   },
   "parameters": {
@@ -580,6 +580,10 @@
     "containerRegistryLoginServer": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistryName')), '2023-07-01').loginServer]"
+    },
+    "containerRegistryAdminUsername": {
+      "type": "string",
+      "value": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistryName')), '2023-07-01').username]"
     },
     "aiProjectName": {
       "type": "string",
