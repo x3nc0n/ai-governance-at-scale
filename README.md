@@ -51,12 +51,18 @@ All four entry points terminate at the same governed control plane:
 | API Management (Developer SKU) | Central AI gateway with token metering, rate limits, content-safety policies |
 | Container Apps Managed Environment | Shared runtime for all four scenario apps |
 | Azure AI Services (S0 multi-model) | Shared model inference endpoint |
-| Azure AI Foundry Project | Prompt management, evaluation, model catalog |
-| gpt-4.1-mini deployment | Default LLM; parameterized |
+| Azure AI Foundry Project (optional) | Prompt management, evaluation, model catalog; disabled by default |
+| Default model deployment (optional) | Default LLM deployment; disabled by default and can be enabled via parameters |
 | Log Analytics Workspace | Centralized log aggregation |
 | Application Insights | Distributed tracing and metrics |
 | Azure Key Vault | Secret storage; Azure RBAC authorization |
 | User-Assigned Managed Identities (×4) | Per-scenario workload identities for RBAC bindings |
+
+**Optional foundation toggles (disabled by default):**
+- `createFoundryProject` — creates an Azure AI Foundry project under the shared AI Services account.
+- `deployModel` — creates a default model deployment (for example, `gpt-4.1-mini`) under the shared AI Services account.
+
+These are intentionally off by default to keep the foundation deployable on subscriptions and tenants that do not yet expose the full Foundry/model deployment path.
 
 **Not deployed by the foundation button — tenant/platform prerequisites:**
 - Microsoft Entra Agent ID (blueprints and agent identities) — see [`docs/prerequisites/entra-agent-id.md`](docs/prerequisites/entra-agent-id.md)

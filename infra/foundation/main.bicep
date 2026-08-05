@@ -28,13 +28,13 @@ param keyVaultName string = 'kv-${take(replace(uniqueString(resourceGroup().id, 
 @description('Name of the Azure AI Services account.')
 param aiServicesName string = 'ais-${take(uniqueString(resourceGroup().id), 12)}'
 
-@description('Whether to create an Azure AI Foundry project under the shared AI Services account.')
+@description('Whether to create an Azure AI Foundry project under the shared AI Services account. Disabled by default to keep the foundation deployable on subscriptions that do not expose the full Foundry project path.')
 param createFoundryProject bool = false
 
 @description('Name of the Azure AI Foundry project.')
 param aiProjectName string = 'aigov-foundry-project'
 
-@description('Whether to create a default model deployment for the shared AI Services account.')
+@description('Whether to create a default model deployment for the shared AI Services account. Disabled by default to keep the foundation deployable on subscriptions that do not expose the required model deployment API path.')
 param deployModel bool = false
 
 @description('Name of the default model deployment.')
