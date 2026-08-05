@@ -39,7 +39,7 @@ All four entry points terminate at the same governed control plane:
 
 > ⚠️ **All scenario Deploy to Azure buttons require the foundation to be deployed first.** Foundation outputs (resource IDs, endpoint URLs, identity principal IDs) are required inputs to every scenario template.
 
-[![Deploy Foundation to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmaster%2Finfra%2Ffoundation%2Fazuredeploy.json)
+[![Deploy Foundation to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmain%2Finfra%2Ffoundation%2Fazuredeploy.json)
 
 > **Note:** The Deploy to Azure button above links to `infra/foundation/azuredeploy.json` in this repository. This ARM file is compiled from `infra/foundation/main.bicep` by CI on every merge. **The button works only when that ARM file is publicly readable at the raw GitHub URL.** The CI workflow in `.github/workflows/bicep-compile.yml` keeps the compiled ARM synchronized with the Bicep source. If you fork this repository, update the button URL to point to your fork.
 
@@ -70,12 +70,12 @@ All four entry points terminate at the same governed control plane:
 
 | # | Scenario | Entry Point | Deploy |
 |---|----------|------------|--------|
-| 01 | [Endpoint / Client AI](scenarios/01-endpoint-ai/README.md) | Claude Code, Cursor, Windsurf, VS Code extensions → Agent 365 SDK / Entra Agent ID → APIM → Foundry / MCP | [![Deploy Scenario 01](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmaster%2Fscenarios%2F01-endpoint-ai%2Finfra%2Fazuredeploy.json) |
-| 02 | [Foundry Hosted Agent](scenarios/02-foundry-agent/README.md) | Foundry-prompted/hosted agent → Entra Agent ID → APIM → Snowflake MCP + M365 MCP | [![Deploy Scenario 02](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmaster%2Fscenarios%2F02-foundry-agent%2Finfra%2Fazuredeploy.json) |
-| 03 | [Copilot Studio Agent](scenarios/03-copilot-studio/README.md) | Published Copilot Studio agent → Entra Agent ID → APIM → Foundry backend → MCP data | [![Deploy Scenario 03](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmaster%2Fscenarios%2F03-copilot-studio%2Finfra%2Fazuredeploy.json) |
-| 04 | [Snowflake-Led Third-Party Agent](scenarios/04-snowflake-agent/README.md) | Snowflake Cortex agent → Agent 365 / Entra federation → APIM → Foundry / M365 MCP | [![Deploy Scenario 04](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmaster%2Fscenarios%2F04-snowflake-agent%2Finfra%2Fazuredeploy.json) |
+| 01 | [Endpoint / Client AI](scenarios/01-endpoint-ai/README.md) | Claude Code, Cursor, Windsurf, VS Code extensions → Agent 365 SDK / Entra Agent ID → APIM → Foundry / MCP | [![Deploy Scenario 01](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmain%2Fscenarios%2F01-endpoint-ai%2Finfra%2Fazuredeploy.json) |
+| 02 | [Foundry Hosted Agent](scenarios/02-foundry-agent/README.md) | Foundry-prompted/hosted agent → Entra Agent ID → APIM → Snowflake MCP + M365 MCP | [![Deploy Scenario 02](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmain%2Fscenarios%2F02-foundry-agent%2Finfra%2Fazuredeploy.json) |
+| 03 | [Copilot Studio Agent](scenarios/03-copilot-studio/README.md) | Published Copilot Studio agent → Entra Agent ID → APIM → Foundry backend → MCP data | [![Deploy Scenario 03](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmain%2Fscenarios%2F03-copilot-studio%2Finfra%2Fazuredeploy.json) |
+| 04 | [Snowflake-Led Third-Party Agent](scenarios/04-snowflake-agent/README.md) | Snowflake Cortex agent → Agent 365 / Entra federation → APIM → Foundry / M365 MCP | [![Deploy Scenario 04](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmain%2Fscenarios%2F04-snowflake-agent%2Finfra%2Fazuredeploy.json) |
 
-> **Button prerequisite:** Each scenario button requires `azuredeploy.json` to be publicly readable at the corresponding raw GitHub URL. CI compiles and commits these files on every merge to `master`. Do not delete or gitignore the compiled ARM files.
+> **Button prerequisite:** Each scenario button requires `azuredeploy.json` to be publicly readable at the corresponding raw GitHub URL. CI compiles and commits these files on every merge to `main`. Do not delete or gitignore the compiled ARM files.
 
 ---
 
