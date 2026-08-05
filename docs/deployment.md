@@ -3,7 +3,7 @@
 ## Deployment sequence
 
 1. Deploy the foundation template from `infra/foundation/azuredeploy.json`.
-2. Record the shared outputs: APIM gateway URL, managed environment ID, AI Services endpoint, Key Vault name, and scenario identity resource IDs.
+2. Record the shared outputs: APIM gateway URL, managed environment ID, AI Services endpoint, Key Vault name, the governed API name/path, the APIM subscription name, and the scenario identity resource IDs.
 3. Deploy one or more scenario templates using those outputs as input parameters.
 
 ## Foundation defaults and optional toggles

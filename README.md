@@ -48,7 +48,7 @@ All four entry points terminate at the same governed control plane:
 **Foundation provisions (ARM-deployed):**
 | Azure Resource | Purpose |
 |----------------|---------|
-| API Management (Developer SKU) | Central AI gateway with token metering, rate limits, content-safety policies |
+| API Management (Developer SKU) | Central AI gateway with token metering, rate limits, and a sample governed API policy set |
 | Container Apps Managed Environment | Shared runtime for all four scenario apps |
 | Azure AI Services (S0 multi-model) | Shared model inference endpoint |
 | Azure AI Foundry Project (optional) | Prompt management, evaluation, model catalog; disabled by default |

@@ -49,6 +49,15 @@ param modelVersion string = '2025-04-14'
 @description('Capacity for the default model deployment.')
 param modelSkuCapacity int = 10
 
+@description('Name of the governed demo API exposed through APIM.')
+param governedApiName string = 'aigov-governed-api'
+
+@description('Path prefix for the governed demo API.')
+param governedApiPath string = 'aigov'
+
+@description('Whether the governed API requires an APIM subscription key.')
+param requireSubscriptionKey bool = true
+
 var identityNames = [
   'id-scenario-01'
   'id-scenario-02'
@@ -163,6 +172,95 @@ resource apim 'Microsoft.ApiManagement/service@2022-08-01' = {
   }
 }
 
+resource apimProduct 'Microsoft.ApiManagement/service/products@2022-08-01' = {
+  parent: apim
+  name: 'aigov-product'
+  properties: {
+    displayName: 'AI Governance Demo'
+    description: 'Shared product for the governed AI estate demo APIs.'
+    subscriptionRequired: requireSubscriptionKey
+    approvalRequired: false
+    state: 'published'
+  }
+}
+
+resource apimSubscription 'Microsoft.ApiManagement/service/subscriptions@2022-08-01' = {
+  parent: apim
+  name: 'aigov-demo-subscription'
+  properties: {
+    displayName: 'AI Governance Demo Subscription'
+    scope: '/products/${apimProduct.name}'
+    state: 'active'
+    allowTracing: true
+  }
+}
+
+resource apimApi 'Microsoft.ApiManagement/service/apis@2022-08-01' = {
+  parent: apim
+  name: governedApiName
+  properties: {
+    displayName: 'Governed AI Estate API'
+    path: governedApiPath
+    protocols: [
+      'https'
+    ]
+    serviceUrl: aiServices.properties.endpoint
+    subscriptionRequired: requireSubscriptionKey
+    type: 'http'
+  }
+}
+
+resource apiOperation 'Microsoft.ApiManagement/service/apis/operations@2022-08-01' = {
+  parent: apimApi
+  name: 'health'
+  properties: {
+    displayName: 'Health Check'
+    method: 'get'
+    urlTemplate: '/health'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Healthy'
+      }
+    ]
+  }
+}
+
+resource apiPolicy 'Microsoft.ApiManagement/service/apis/policies@2022-08-01' = {
+  parent: apimApi
+  name: 'policy'
+  properties: {
+    format: 'rawxml'
+    value: '''<policies>
+  <inbound>
+    <base />
+    <rate-limit-by-key calls="60" renewal-period="60" counter-key="@(context.Subscription?.Id ?? context.Request.Headers.GetValueOrDefault(&quot;x-request-id&quot;, &quot;anonymous&quot;))" />
+    <set-header name="x-aigov-policy" exists-action="override">
+      <value>apim-rate-limit-and-log</value>
+    </set-header>
+    <set-header name="x-aigov-correlation-id" exists-action="override">
+      <value>@(context.Request.Headers.GetValueOrDefault(&quot;x-correlation-id&quot;, Guid.NewGuid().ToString()))</value>
+    </set-header>
+    <set-header name="x-request-id" exists-action="override">
+      <value>@(context.Request.Headers.GetValueOrDefault(&quot;x-request-id&quot;, Guid.NewGuid().ToString()))</value>
+    </set-header>
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+    <set-header name="x-aigov-response-policy" exists-action="override">
+      <value>apim-response</value>
+    </set-header>
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>'''
+  }
+}
+
 output apimName string = apim.name
 output apimGatewayUrl string = 'https://${apim.name}.azure-api.net'
 output managedEnvironmentId string = managedEnvironment.id
@@ -174,6 +272,9 @@ output aiServicesEndpoint string = aiServices.properties.endpoint
 output aiProjectName string = createFoundryProject ? aiProject.name : ''
 output keyVaultName string = keyVault.name
 output keyVaultResourceId string = keyVault.id
+output governedApiName string = apimApi.name
+output governedApiPath string = governedApiPath
+output apimSubscriptionName string = apimSubscription.name
 output scenarioIdentityResourceIds array = identities.outputs.identityResourceIds
 output scenarioIdentityNames array = identities.outputs.identityNames
 output scenarioIdentityPrincipalIds array = identities.outputs.identityPrincipalIds
