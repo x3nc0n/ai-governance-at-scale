@@ -1,0 +1,27 @@
+name: Compile Bicep templates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Azure CLI Bicep
+        uses: azure/setup-bicep@v2
+      - name: Compile foundation template
+        run: az bicep build --file infra/foundation/main.bicep --outfile infra/foundation/azuredeploy.json
+      - name: Compile scenario 01 template
+        run: az bicep build --file scenarios/01-endpoint-ai/infra/main.bicep --outfile scenarios/01-endpoint-ai/infra/azuredeploy.json
+      - name: Compile scenario 02 template
+        run: az bicep build --file scenarios/02-foundry-agent/infra/main.bicep --outfile scenarios/02-foundry-agent/infra/azuredeploy.json
+      - name: Compile scenario 03 template
+        run: az bicep build --file scenarios/03-copilot-studio/infra/main.bicep --outfile scenarios/03-copilot-studio/infra/azuredeploy.json
+      - name: Compile scenario 04 template
+        run: az bicep build --file scenarios/04-snowflake-agent/infra/main.bicep --outfile scenarios/04-snowflake-agent/infra/azuredeploy.json
+      - name: Fail if ARM files changed
+        run: git diff --exit-code -- infra/foundation/azuredeploy.json scenarios/01-endpoint-ai/infra/azuredeploy.json scenarios/02-foundry-agent/infra/azuredeploy.json scenarios/03-copilot-studio/infra/azuredeploy.json scenarios/04-snowflake-agent/infra/azuredeploy.json

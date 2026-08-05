@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus2"
+    },
+    "appName": {
+      "value": "ca-copilot-studio-demo"
+    },
+    "managedEnvironmentId": {
+      "value": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aigov-foundation-demo/providers/Microsoft.App/managedEnvironments/cae-aigov-demo"
+    },
+    "identityResourceId": {
+      "value": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aigov-foundation-demo/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-scenario-03"
+    },
+    "identityClientId": {
+      "value": "33333333-3333-3333-3333-333333333333"
+    }
+  }
+}

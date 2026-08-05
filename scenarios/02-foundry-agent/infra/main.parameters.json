@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus2"
+    },
+    "appName": {
+      "value": "ca-foundry-agent-demo"
+    },
+    "managedEnvironmentId": {
+      "value": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aigov-foundation-demo/providers/Microsoft.App/managedEnvironments/cae-aigov-demo"
+    },
+    "identityResourceId": {
+      "value": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aigov-foundation-demo/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-scenario-02"
+    },
+    "identityClientId": {
+      "value": "22222222-2222-2222-2222-222222222222"
+    }
+  }
+}

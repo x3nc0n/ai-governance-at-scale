@@ -1,0 +1,117 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.44.1.10279",
+      "templateHash": "13779122042384445080"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Azure region for the scenario deployment."
+      }
+    },
+    "appName": {
+      "type": "string",
+      "defaultValue": "[format('ca-copilot-studio-{0}', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "Name of the scenario container app."
+      }
+    },
+    "managedEnvironmentId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the shared managed environment."
+      }
+    },
+    "identityResourceId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the user-assigned identity for this scenario."
+      }
+    },
+    "identityClientId": {
+      "type": "string",
+      "metadata": {
+        "description": "Client ID of the user-assigned identity for this scenario."
+      }
+    },
+    "foundationAiServicesName": {
+      "type": "string",
+      "defaultValue": "ai-services",
+      "metadata": {
+        "description": "Name of the shared Azure AI Services account."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2024-03-01",
+      "name": "[parameters('appName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', parameters('identityResourceId'))]": {}
+        }
+      },
+      "properties": {
+        "managedEnvironmentId": "[parameters('managedEnvironmentId')]",
+        "configuration": {
+          "ingress": {
+            "external": true,
+            "targetPort": 8080,
+            "allowInsecure": false
+          },
+          "secrets": []
+        },
+        "template": {
+          "containers": [
+            {
+              "name": "copilot-studio",
+              "image": "mcr.microsoft.com/k8se/quickstart:latest",
+              "env": [
+                {
+                  "name": "SCENARIO_ID",
+                  "value": "03-copilot-studio"
+                },
+                {
+                  "name": "AZURE_AI_SERVICES",
+                  "value": "[parameters('foundationAiServicesName')]"
+                },
+                {
+                  "name": "AZURE_CLIENT_ID",
+                  "value": "[parameters('identityClientId')]"
+                }
+              ],
+              "resources": {
+                "cpu": "[json('0.25')]",
+                "memory": "0.5Gi"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "containerAppName": {
+      "type": "string",
+      "value": "[parameters('appName')]"
+    },
+    "containerAppFqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('appName')), '2024-03-01').configuration.ingress.fqdn]"
+    },
+    "identityPrincipalId": {
+      "type": "string",
+      "value": "[reference(parameters('identityResourceId'), '2023-01-31').principalId]"
+    }
+  }
+}
