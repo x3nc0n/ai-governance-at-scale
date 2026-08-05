@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "13779122042384445080"
+      "templateHash": "2126982772989143018"
     }
   },
   "parameters": {
@@ -41,6 +41,31 @@
         "description": "Client ID of the user-assigned identity for this scenario."
       }
     },
+    "containerRegistryServer": {
+      "type": "string",
+      "metadata": {
+        "description": "Registry server for the shared demo image."
+      }
+    },
+    "containerRegistryUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Registry username for the shared demo image."
+      }
+    },
+    "containerRegistryPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Registry password for the shared demo image."
+      }
+    },
+    "containerImageName": {
+      "type": "string",
+      "defaultValue": "aigov-demo-app:latest",
+      "metadata": {
+        "description": "Name of the shared demo image to deploy for this scenario."
+      }
+    },
     "foundationAiServicesName": {
       "type": "string",
       "defaultValue": "ai-services",
@@ -69,13 +94,25 @@
             "targetPort": 8080,
             "allowInsecure": false
           },
-          "secrets": []
+          "secrets": [
+            {
+              "name": "acr-password",
+              "value": "[parameters('containerRegistryPassword')]"
+            }
+          ],
+          "registries": [
+            {
+              "server": "[parameters('containerRegistryServer')]",
+              "username": "[parameters('containerRegistryUsername')]",
+              "passwordSecretRef": "acr-password"
+            }
+          ]
         },
         "template": {
           "containers": [
             {
               "name": "copilot-studio",
-              "image": "mcr.microsoft.com/k8se/quickstart:latest",
+              "image": "[format('{0}/{1}', parameters('containerRegistryServer'), parameters('containerImageName'))]",
               "env": [
                 {
                   "name": "SCENARIO_ID",
@@ -88,6 +125,14 @@
                 {
                   "name": "AZURE_CLIENT_ID",
                   "value": "[parameters('identityClientId')]"
+                },
+                {
+                  "name": "SCENARIO_LABEL",
+                  "value": "Copilot Studio Agent"
+                },
+                {
+                  "name": "SCENARIO_DESCRIPTION",
+                  "value": "A low-code Copilot Studio agent with governed backend routing"
                 }
               ],
               "resources": {

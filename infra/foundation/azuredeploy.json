@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "14295208905520276758"
+      "templateHash": "14309244770050105508"
     }
   },
   "parameters": {
@@ -67,6 +67,13 @@
       "defaultValue": "[format('ais-{0}', take(uniqueString(resourceGroup().id), 12))]",
       "metadata": {
         "description": "Name of the Azure AI Services account."
+      }
+    },
+    "containerRegistryName": {
+      "type": "string",
+      "defaultValue": "[format('acr{0}', take(replace(toLower(uniqueString(resourceGroup().id, subscription().subscriptionId)), '-', ''), 20))]",
+      "metadata": {
+        "description": "Name of the shared Azure Container Registry used for the scenario demo images."
       }
     },
     "createFoundryProject": {
@@ -203,6 +210,19 @@
         "publicNetworkAccess": "Enabled",
         "customSubDomainName": "[toLower(parameters('aiServicesName'))]",
         "disableLocalAuth": false
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2023-07-01",
+      "name": "[parameters('containerRegistryName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "adminUserEnabled": true,
+        "publicNetworkAccess": "Enabled"
       }
     },
     {
@@ -552,6 +572,14 @@
     "aiServicesEndpoint": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('aiServicesName')), '2025-06-01').endpoint]"
+    },
+    "containerRegistryName": {
+      "type": "string",
+      "value": "[parameters('containerRegistryName')]"
+    },
+    "containerRegistryLoginServer": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistryName')), '2023-07-01').loginServer]"
     },
     "aiProjectName": {
       "type": "string",

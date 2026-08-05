@@ -28,6 +28,9 @@ param keyVaultName string = 'kv-${take(replace(uniqueString(resourceGroup().id, 
 @description('Name of the Azure AI Services account.')
 param aiServicesName string = 'ais-${take(uniqueString(resourceGroup().id), 12)}'
 
+@description('Name of the shared Azure Container Registry used for the scenario demo images.')
+param containerRegistryName string = 'acr${take(replace(toLower(uniqueString(resourceGroup().id, subscription().subscriptionId)), '-', ''), 20)}'
+
 @description('Whether to create an Azure AI Foundry project under the shared AI Services account. Disabled by default to keep the foundation deployable on subscriptions that do not expose the full Foundry project path.')
 param createFoundryProject bool = false
 
@@ -129,6 +132,18 @@ resource aiServices 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
     publicNetworkAccess: 'Enabled'
     customSubDomainName: toLower(aiServicesName)
     disableLocalAuth: false
+  }
+}
+
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
+  name: containerRegistryName
+  location: location
+  sku: {
+    name: 'Basic'
+  }
+  properties: {
+    adminUserEnabled: true
+    publicNetworkAccess: 'Enabled'
   }
 }
 
@@ -269,6 +284,8 @@ output appInsightsConnectionString string = monitoring.outputs.appInsightsConnec
 output logAnalyticsWorkspaceId string = monitoring.outputs.workspaceId
 output aiServicesName string = aiServices.name
 output aiServicesEndpoint string = aiServices.properties.endpoint
+output containerRegistryName string = containerRegistry.name
+output containerRegistryLoginServer string = containerRegistry.properties.loginServer
 output aiProjectName string = createFoundryProject ? aiProject.name : ''
 output keyVaultName string = keyVault.name
 output keyVaultResourceId string = keyVault.id

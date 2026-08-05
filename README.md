@@ -50,6 +50,7 @@ All four entry points terminate at the same governed control plane:
 |----------------|---------|
 | API Management (Developer SKU) | Central AI gateway with token metering, rate limits, and a sample governed API policy set |
 | Container Apps Managed Environment | Shared runtime for all four scenario apps |
+| Azure Container Registry | Shared registry for the scenario demo images and governance metadata app |
 | Azure AI Services (S0 multi-model) | Shared model inference endpoint |
 | Azure AI Foundry Project (optional) | Prompt management, evaluation, model catalog; disabled by default |
 | Default model deployment (optional) | Default LLM deployment; disabled by default and can be enabled via parameters |
@@ -120,6 +121,12 @@ scripts/
 ```
 
 ---
+
+## Unified Governance Narrative
+
+The repo is designed to tell one customer-facing story: one governed AI estate with four entry points. The four scenarios are intentionally aligned so they can be presented together as a single architecture story: identity, policy, security, and monitoring are shared across every path.
+
+For the full narrative, see [docs/scenario-narrative.md](docs/scenario-narrative.md).
 
 ## Governance Capabilities at a Glance
 

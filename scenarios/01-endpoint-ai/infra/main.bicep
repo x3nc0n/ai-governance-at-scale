@@ -15,6 +15,19 @@ param identityResourceId string
 @description('Client ID of the user-assigned identity for this scenario.')
 param identityClientId string
 
+@description('Registry server for the shared demo image.')
+param containerRegistryServer string
+
+@description('Registry username for the shared demo image.')
+param containerRegistryUsername string
+
+@description('Registry password for the shared demo image.')
+@secure()
+param containerRegistryPassword string
+
+@description('Name of the shared demo image to deploy for this scenario.')
+param containerImageName string = 'aigov-demo-app:latest'
+
 @description('Gateway URL for the shared API Management instance.')
 param foundationApimUrl string = 'https://apim-aigov.azure-api.net'
 
@@ -38,13 +51,25 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: 8080
         allowInsecure: false
       }
-      secrets: []
+      secrets: [
+        {
+          name: 'acr-password'
+          value: containerRegistryPassword
+        }
+      ]
+      registries: [
+        {
+          server: containerRegistryServer
+          username: containerRegistryUsername
+          passwordSecretRef: 'acr-password'
+        }
+      ]
     }
     template: {
       containers: [
         {
           name: 'endpoint-ai'
-          image: 'mcr.microsoft.com/k8se/quickstart:latest'
+          image: '${containerRegistryServer}/${containerImageName}'
           env: [
             {
               name: 'SCENARIO_ID'
@@ -61,6 +86,14 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'AZURE_CLIENT_ID'
               value: identityClientId
+            }
+            {
+              name: 'SCENARIO_LABEL'
+              value: 'Endpoint / Client AI'
+            }
+            {
+              name: 'SCENARIO_DESCRIPTION'
+              value: 'Developer tools and endpoint AI routed through the governed estate'
             }
           ]
           resources: {
