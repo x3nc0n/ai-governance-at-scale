@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "16558448810496283682"
+      "templateHash": "6311830131258617545"
     }
   },
   "parameters": {
@@ -348,7 +348,7 @@
       "name": "[format('{0}/{1}/{2}', parameters('apimName'), parameters('governedApiName'), 'policy')]",
       "properties": {
         "format": "rawxml",
-        "value": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <rate-limit-by-key calls=\"60\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Id ?? context.Request.Headers.GetValueOrDefault(&quot;x-request-id&quot;, &quot;anonymous&quot;))\" />\r\n    <set-header name=\"x-aigov-policy\" exists-action=\"override\">\r\n      <value>apim-rate-limit-and-log</value>\r\n    </set-header>\r\n    <set-header name=\"x-aigov-correlation-id\" exists-action=\"override\">\r\n      <value>@(context.Request.Headers.GetValueOrDefault(&quot;x-correlation-id&quot;, Guid.NewGuid().ToString()))</value>\r\n    </set-header>\r\n    <set-header name=\"x-request-id\" exists-action=\"override\">\r\n      <value>@(context.Request.Headers.GetValueOrDefault(&quot;x-request-id&quot;, Guid.NewGuid().ToString()))</value>\r\n    </set-header>\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n    <set-header name=\"x-aigov-response-policy\" exists-action=\"override\">\r\n      <value>apim-response</value>\r\n    </set-header>\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>"
+        "value": "<policies>\n  <inbound>\n    <base />\n    <rate-limit-by-key calls=\"60\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Id ?? context.Request.Headers.GetValueOrDefault(&quot;x-request-id&quot;, &quot;anonymous&quot;))\" />\n    <set-header name=\"x-aigov-policy\" exists-action=\"override\">\n      <value>apim-rate-limit-and-log</value>\n    </set-header>\n    <set-header name=\"x-aigov-correlation-id\" exists-action=\"override\">\n      <value>@(context.Request.Headers.GetValueOrDefault(&quot;x-correlation-id&quot;, Guid.NewGuid().ToString()))</value>\n    </set-header>\n    <set-header name=\"x-request-id\" exists-action=\"override\">\n      <value>@(context.Request.Headers.GetValueOrDefault(&quot;x-request-id&quot;, Guid.NewGuid().ToString()))</value>\n    </set-header>\n  </inbound>\n  <backend>\n    <base />\n  </backend>\n  <outbound>\n    <base />\n    <set-header name=\"x-aigov-response-policy\" exists-action=\"override\">\n      <value>apim-response</value>\n    </set-header>\n  </outbound>\n  <on-error>\n    <base />\n  </on-error>\n</policies>"
       },
       "dependsOn": [
         "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), parameters('governedApiName'))]"
