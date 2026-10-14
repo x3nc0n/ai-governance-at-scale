@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Azure CLI Bicep
-        uses: azure/setup-bicep@v2
+        run: az bicep install --version v0.44.1
       - name: Compile foundation template
         run: az bicep build --file infra/foundation/main.bicep --outfile infra/foundation/azuredeploy.json
       - name: Compile scenario 01 template
