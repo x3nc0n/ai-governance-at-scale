@@ -2,6 +2,8 @@
 
 > ai-governance-at-scale
 
+Team configuration lives in this repository's `.squad/` directory. Charter paths below are relative to `.squad/`; no external team root is required.
+
 ## Coordinator
 
 | Name | Role | Notes |
@@ -12,7 +14,15 @@
 
 | Name | Role | Charter | Status |
 |------|------|---------|--------|
-
+| Morpheus | Solution Lead | agents/morpheus/charter.md | Active |
+| Trinity | Azure IaC Engineer | agents/trinity/charter.md | Active |
+| Neo | AI Governance & Security Architect | agents/neo/charter.md | Active |
+| Tank | Technical Storyteller | agents/tank/charter.md | Active |
+| Switch | Deployment Validator | agents/switch/charter.md | Active |
+| Scribe | Session Logger | agents/scribe/charter.md | Active |
+| Ralph | Work Monitor | agents/ralph/charter.md | Active |
+| Rai | RAI Reviewer | agents/Rai/charter.md | Active |
+| Fact Checker | Fact Checker | agents/fact-checker/charter.md | Active |
 
 ## Coding Agent
 
@@ -50,4 +60,6 @@
 ## Project Context
 
 - **Project:** ai-governance-at-scale
+- **Description:** Monorepo of four Azure-deployable reference architectures showing one governed AI estate across endpoint, Foundry, Copilot Studio, and third-party agent ingress patterns.
+- **Stack:** Azure Bicep/ARM, Azure API Management AI Gateway, Azure AI Foundry, Entra Agent ID, Agent 365, Purview, Defender for AI Services, MCP, Snowflake, and Microsoft 365.
 - **Created:** 2026-08-04

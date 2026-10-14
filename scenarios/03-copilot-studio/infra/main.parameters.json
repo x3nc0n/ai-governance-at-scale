@@ -8,14 +8,23 @@
     "appName": {
       "value": "ca-copilot-studio-demo"
     },
-    "managedEnvironmentId": {
-      "value": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aigov-foundation-demo/providers/Microsoft.App/managedEnvironments/cae-aigov-demo"
+    "foundationResourceGroupName": {
+      "value": "rg-aigov-foundation-demo"
     },
-    "identityResourceId": {
-      "value": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aigov-foundation-demo/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-scenario-03"
+    "foundationManagedEnvironmentName": {
+      "value": "replace-with-foundation-environment-name"
     },
-    "identityClientId": {
-      "value": "33333333-3333-3333-3333-333333333333"
+    "foundationContainerRegistryName": {
+      "value": "replace-with-foundation-registry-name"
+    },
+    "foundationAiServicesName": {
+      "value": "replace-with-foundation-ai-services-name"
+    },
+    "foundationApimName": {
+      "value": "replace-with-foundation-apim-name"
+    },
+    "containerImageName": {
+      "value": "aigov-demo-app:latest"
     }
   }
 }

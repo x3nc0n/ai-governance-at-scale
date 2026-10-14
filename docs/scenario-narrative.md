@@ -27,8 +27,18 @@ All four scenarios share the same foundational controls:
 - Microsoft Entra Agent ID lifecycle
 - Azure API Management policy enforcement
 - a shared container runtime and observability stack
-- a shared registry-backed demo app for visible metadata and health checks
+- a shared registry-backed demo app with rule-based guidance and broker endpoints
 - a common story of identity, security, monitoring, and auditability
+
+## Demo agent behaviors
+
+The first three scenarios deploy deterministic demonstrations, not LLM-backed agents or native Foundry/Copilot Studio integrations:
+
+- Scenario 01 hosts a developer governance assistant that answers approved-tool and policy questions.
+- Scenario 02 returns sample policy-review recommendations rather than inspecting live governance posture.
+- Scenario 03 calls the scenario 01 knowledge base through APIM with a subscription key. This is an HTTP broker demonstration, not the Agent2Agent protocol.
+
+Responses are sample guidance, not evidence of enforced policy, completed identity provisioning, Purview classification, or Defender inspection. Public Container App ingress is not caller-authenticated. These alpha endpoints must not receive sensitive data.
 
 ## How to use this repo
 

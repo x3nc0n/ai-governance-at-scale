@@ -61,6 +61,18 @@ param governedApiPath string = 'aigov'
 @description('Whether the governed API requires an APIM subscription key.')
 param requireSubscriptionKey bool = true
 
+@description('Whether to deploy a shared Microsoft Purview account for AI governance controls and lineage.')
+param enablePurview bool = true
+
+@description('Name of the Purview account resource.')
+param purviewAccountName string = 'pview-aigov-${take(uniqueString(resourceGroup().id), 12)}'
+
+@description('Managed resource group name for the Purview account.')
+param purviewManagedResourceGroupName string = 'rg-aigov-purview-${take(uniqueString(resourceGroup().id), 8)}'
+
+@description('Whether to enable shared governance diagnostics for AI Services and APIM to the shared Log Analytics workspace.')
+param enableGovernanceDiagnostics bool = true
+
 var identityNames = [
   'id-scenario-01'
   'id-scenario-02'
@@ -97,6 +109,9 @@ resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
       }
     }
   }
+  dependsOn: [
+    monitoring
+  ]
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -114,6 +129,18 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enablePurgeProtection: true
     softDeleteRetentionInDays: 90
     createMode: 'default'
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource purviewAccount 'Microsoft.Purview/accounts@2023-05-01-preview' = if (enablePurview) {
+  name: purviewAccountName
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    managedResourceGroupName: purviewManagedResourceGroupName
     publicNetworkAccess: 'Enabled'
   }
 }
@@ -276,6 +303,46 @@ resource apiPolicy 'Microsoft.ApiManagement/service/apis/policies@2022-08-01' = 
   }
 }
 
+resource aiServicesDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (enableGovernanceDiagnostics) {
+  name: 'diag-${aiServices.name}'
+  scope: aiServices
+  properties: {
+    workspaceId: monitoring.outputs.workspaceId
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
+resource apimDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (enableGovernanceDiagnostics) {
+  name: 'diag-${apim.name}'
+  scope: apim
+  properties: {
+    workspaceId: monitoring.outputs.workspaceId
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
 output apimName string = apim.name
 output apimGatewayUrl string = 'https://${apim.name}.azure-api.net'
 output managedEnvironmentId string = managedEnvironment.id
@@ -293,6 +360,8 @@ output keyVaultResourceId string = keyVault.id
 output governedApiName string = apimApi.name
 output governedApiPath string = governedApiPath
 output apimSubscriptionName string = apimSubscription.name
+output purviewAccountName string = enablePurview ? purviewAccount.name : ''
+output purviewAccountId string = enablePurview ? purviewAccount.id : ''
 output scenarioIdentityResourceIds array = identities.outputs.identityResourceIds
 output scenarioIdentityNames array = identities.outputs.identityNames
 output scenarioIdentityPrincipalIds array = identities.outputs.identityPrincipalIds

@@ -6,30 +6,47 @@ param location string = resourceGroup().location
 @description('Name of the scenario container app.')
 param appName string = 'ca-copilot-studio-${uniqueString(resourceGroup().id)}'
 
-@description('Resource ID of the shared managed environment.')
-param managedEnvironmentId string
+@description('Name of the foundation resource group that contains the shared governance estate.')
+param foundationResourceGroupName string = 'rg-aigov-foundation-demo'
 
-@description('Resource ID of the user-assigned identity for this scenario.')
-param identityResourceId string
-
-@description('Client ID of the user-assigned identity for this scenario.')
-param identityClientId string
-
-@description('Registry server for the shared demo image.')
-param containerRegistryServer string
-
-@description('Registry username for the shared demo image.')
-param containerRegistryUsername string
-
-@description('Registry password for the shared demo image.')
-@secure()
-param containerRegistryPassword string
+@description('Subscription ID that contains the foundation deployment. Defaults to the current subscription.')
+param foundationSubscriptionId string = subscription().subscriptionId
 
 @description('Name of the shared demo image to deploy for this scenario.')
 param containerImageName string = 'aigov-demo-app:latest'
 
-@description('Name of the shared Azure AI Services account.')
-param foundationAiServicesName string = 'ai-services'
+@description('Name of the shared managed environment in the foundation resource group.')
+param foundationManagedEnvironmentName string
+
+@description('Name of the shared container registry in the foundation resource group.')
+param foundationContainerRegistryName string
+
+@description('Name of the shared Azure AI Services account in the foundation resource group.')
+param foundationAiServicesName string
+
+@description('Name of the shared API Management instance in the foundation resource group.')
+param foundationApimName string
+
+@secure()
+@description('APIM subscription key authorized for the developer knowledge base API. Supply securely at deployment time.')
+param foundationApimSubscriptionKey string
+
+var foundationIdentityName string = 'id-scenario-03'
+
+resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+  scope: resourceGroup(foundationSubscriptionId, foundationResourceGroupName)
+  name: foundationManagedEnvironmentName
+}
+
+resource scenarioIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  scope: resourceGroup(foundationSubscriptionId, foundationResourceGroupName)
+  name: foundationIdentityName
+}
+
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
+  scope: resourceGroup(foundationSubscriptionId, foundationResourceGroupName)
+  name: foundationContainerRegistryName
+}
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: appName
@@ -37,11 +54,11 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${identityResourceId}': {}
+      '${scenarioIdentity.id}': {}
     }
   }
   properties: {
-    managedEnvironmentId: managedEnvironmentId
+    managedEnvironmentId: managedEnvironment.id
     configuration: {
       ingress: {
         external: true
@@ -50,14 +67,18 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
       secrets: [
         {
+          name: 'apim-subscription-key'
+          value: foundationApimSubscriptionKey
+        }
+        {
           name: 'acr-password'
-          value: containerRegistryPassword
+          value: containerRegistry.listCredentials().passwords[0].value
         }
       ]
       registries: [
         {
-          server: containerRegistryServer
-          username: containerRegistryUsername
+          server: containerRegistry.properties.loginServer
+          username: containerRegistry.listCredentials().username
           passwordSecretRef: 'acr-password'
         }
       ]
@@ -66,7 +87,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: 'copilot-studio'
-          image: '${containerRegistryServer}/${containerImageName}'
+          image: '${containerRegistry.properties.loginServer}/${containerImageName}'
           env: [
             {
               name: 'SCENARIO_ID'
@@ -78,15 +99,23 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             }
             {
               name: 'AZURE_CLIENT_ID'
-              value: identityClientId
+              value: reference(scenarioIdentity.id, '2023-01-31').clientId
             }
             {
               name: 'SCENARIO_LABEL'
-              value: 'Copilot Studio Agent'
+              value: 'Copilot Studio Governance Agent'
             }
             {
               name: 'SCENARIO_DESCRIPTION'
-              value: 'A low-code Copilot Studio agent with governed backend routing'
+              value: 'A low-code governance agent that brokers requests to the developer knowledge base behind APIM'
+            }
+            {
+              name: 'KNOWLEDGE_BASE_URL'
+              value: 'https://${foundationApimName}.azure-api.net/developer-kb/invoke'
+            }
+            {
+              name: 'APIM_SUBSCRIPTION_KEY'
+              secretRef: 'apim-subscription-key'
             }
           ]
           resources: {
@@ -101,4 +130,4 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
 
 output containerAppName string = containerApp.name
 output containerAppFqdn string = containerApp.properties.configuration.ingress.fqdn
-output identityPrincipalId string = reference(identityResourceId, '2023-01-31').principalId
+output identityPrincipalId string = reference(scenarioIdentity.id, '2023-01-31').principalId

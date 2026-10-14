@@ -57,6 +57,8 @@ All four entry points terminate at the same governed control plane:
 | Log Analytics Workspace | Centralized log aggregation |
 | Application Insights | Distributed tracing and metrics |
 | Azure Key Vault | Secret storage; Azure RBAC authorization |
+| Microsoft Purview account | Optional account resource; classification, lineage, and DSPM configuration remain separate |
+| Governance diagnostics | AI Services and APIM diagnostic settings flowing into Log Analytics for the shared governance story |
 | User-Assigned Managed Identities (×4) | Per-scenario workload identities for RBAC bindings |
 
 **Optional foundation toggles (disabled by default):**
@@ -70,6 +72,12 @@ These are intentionally off by default to keep the foundation deployable on subs
 - Agent 365 — M365 admin center provisioning required
 - Purview DSPM for AI — tenant-level; core capabilities available, some features in Public Preview
 - Defender for AI Services — subscription-level toggle; agent-specific protections in **Public Preview**
+
+**Bootstrapping the governance plane:**
+- The foundation template now deploys a Purview account and governance diagnostics by default.
+- Use [`scripts/bootstrap-governance.ps1`](scripts/bootstrap-governance.ps1) or [`scripts/bootstrap-governance.sh`](scripts/bootstrap-governance.sh) for the remaining tenant/subscription-level bootstrap steps such as enabling Defender for Cloud posture pricing and providing a named Purview target for the current subscription.
+
+**Alpha implementation:** The first three scenario apps return deterministic sample guidance; scenario 03 also calls scenario 01 through APIM. They are not native Foundry/Copilot Studio agents, do not invoke an LLM, and do not demonstrate full enforcement of the architectural capabilities listed below. Public app ingress is not caller-authenticated. See [deployment parameters and limitations](docs/deployment.md); do not send sensitive data.
 
 ---
 
