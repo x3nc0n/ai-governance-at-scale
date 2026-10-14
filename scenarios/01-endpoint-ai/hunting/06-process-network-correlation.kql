@@ -1,0 +1,32 @@
+// Exact process-instance correlation; no assumed four-hour process lifetime.
+let NetworkLookback = 7d;
+let CreationLookback = 30d;
+let AiText = @"(?i)(^|[^a-z0-9_])(claude|anthropic|codex|openai|chatgpt|copilot|gemini|cursor|windsurf|cline|kiro|opencode|ollama|lm[- ]?studio|perplexity|openclaw|qwen|deepseek)([^a-z0-9_]|$)";
+let Evidence = (name:string, path:string, command:string) {
+    case(name in~ ("claude", "claude.exe", "codex", "codex.exe", "copilot", "copilot.exe", "gemini", "gemini.exe", "cursor", "cursor.exe", "windsurf", "windsurf.exe", "kiro", "kiro.exe", "opencode", "opencode.exe", "ollama", "ollama.exe", "lmstudio", "lmstudio.exe", "lm-studio", "lm-studio.exe", "LM Studio", "LM Studio.exe", "openclaw", "openclaw.exe"), "image-name-candidate",
+        strcat(path, " ", command) matches regex AiText, "path-or-commandline-candidate", "none")
+};
+let Candidates = DeviceProcessEvents
+    | where Timestamp > ago(CreationLookback)
+    | where ActionType == "ProcessCreated"
+    | where isnotempty(DeviceId) and ProcessId > 0 and isnotnull(ProcessCreationTime)
+    | extend ProcessEvidence = Evidence(FileName, FolderPath, ProcessCommandLine)
+    | where ProcessEvidence != "none"
+    | project DeviceId, ActorPid = ProcessId, ActorCreated = ProcessCreationTime,
+        CreatedEventTime = Timestamp, CreatedReportId = ReportId,
+        CreatedDeviceName = DeviceName, CreatedAccountUpn = AccountUpn,
+        CreatedFileName = FileName, CreatedFolderPath = FolderPath,
+        CreatedCommandLine = ProcessCommandLine, CreatedSHA1 = SHA1, ProcessEvidence
+    | summarize arg_min(CreatedEventTime, *) by DeviceId, ActorPid, ActorCreated;
+DeviceNetworkEvents
+| where Timestamp > ago(NetworkLookback)
+| where isnotempty(DeviceId) and InitiatingProcessId > 0 and isnotnull(InitiatingProcessCreationTime)
+| extend ActorPid = InitiatingProcessId, ActorCreated = InitiatingProcessCreationTime
+| join kind=inner (Candidates) on DeviceId, ActorPid, ActorCreated
+| where Timestamp >= ActorCreated
+| project Timestamp, DeviceId, DeviceName, ReportId, ActionType,
+    RemoteUrl, RemoteIP, RemotePort, LocalIP, LocalPort, Protocol,
+    InitiatingProcessId, InitiatingProcessCreationTime, InitiatingProcessFileName,
+    InitiatingProcessCommandLine, InitiatingProcessAccountUpn,
+    CreatedEventTime, CreatedReportId, CreatedDeviceName, CreatedAccountUpn,
+    CreatedFileName, CreatedFolderPath, CreatedCommandLine, CreatedSHA1, ProcessEvidence

@@ -1,0 +1,20 @@
+// Hunting summary only: approximate observed activity, not an installed-agent inventory.
+let Lookback = 30d;
+let AiText = @"(?i)(^|[^a-z0-9_])(claude|anthropic|codex|openai|chatgpt|copilot|gemini|cursor|windsurf|cline|kiro|opencode|ollama|lm[- ]?studio|perplexity|openclaw|qwen|deepseek)([^a-z0-9_]|$)";
+let Evidence = (name:string, path:string, command:string) {
+    case(name in~ ("claude", "claude.exe", "codex", "codex.exe", "copilot", "copilot.exe", "gemini", "gemini.exe", "cursor", "cursor.exe", "windsurf", "windsurf.exe", "kiro", "kiro.exe", "opencode", "opencode.exe", "ollama", "ollama.exe", "lmstudio", "lmstudio.exe", "lm-studio", "lm-studio.exe", "LM Studio", "LM Studio.exe", "openclaw", "openclaw.exe"), "image-name-candidate",
+        strcat(path, " ", command) matches regex AiText, "path-or-commandline-candidate", "none")
+};
+DeviceProcessEvents
+| where Timestamp > ago(Lookback)
+| where ActionType == "ProcessCreated"
+| extend ProcessEvidence = Evidence(FileName, FolderPath, ProcessCommandLine)
+| where ProcessEvidence != "none"
+| summarize EventCount = count(), FirstSeen = min(Timestamp), LastSeen = max(Timestamp),
+    ApproxDevices = dcount(DeviceId),
+    ApproxExecutingUpns = dcount(AccountUpn) - iff(countif(isempty(AccountUpn)) > 0, 1, 0),
+    MissingExecutingUpnEvents = countif(isempty(AccountUpn)),
+    SampleDevices = make_set(DeviceName, 20), SamplePaths = make_set(FolderPath, 20),
+    SampleHashes = make_set(SHA1, 20)
+    by FileName, ProcessEvidence
+| order by EventCount desc

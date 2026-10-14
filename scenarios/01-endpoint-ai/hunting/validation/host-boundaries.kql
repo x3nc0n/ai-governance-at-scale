@@ -1,0 +1,35 @@
+// Tenant-executable fixture, no endpoint data needed. Expected result: zero rows.
+let NormalizeHost = (raw:string) {
+    let value = trim(@"\s+", raw);
+    let absolute = case(value startswith "//", strcat("https:", value),
+        value contains "://", value, strcat("https://", value));
+    trim_end(@"\.+", tolower(tostring(parse_url(absolute).Host)))
+};
+let IsAiDestination = (host:string) {
+    host in ("openai.com", "chatgpt.com", "anthropic.com", "claude.ai", "generativelanguage.googleapis.com")
+    or host endswith ".openai.com" or host endswith ".chatgpt.com"
+    or host endswith ".anthropic.com" or host endswith ".claude.ai"
+    or host endswith ".generativelanguage.googleapis.com"
+};
+datatable(RemoteUrl:string, Expected:bool) [
+    "openai.com", true,
+    "HTTPS://API.OPENAI.COM:443/v1/models", true,
+    " https://api.openai.com./v1 ", true,
+    "//api.anthropic.com/v1/messages", true,
+    "claude.ai", true,
+    "https://chatgpt.com/", true,
+    "generativelanguage.googleapis.com", true,
+    "github.com", false,
+    "api.github.com", false,
+    "googleapis.com", false,
+    "storage.googleapis.com", false,
+    "notopenai.com", false,
+    "openai.com.evil", false,
+    "https://evil.example/openai.com", false,
+    "https://openai.com@evil.example/", false,
+    "https://evil.example/?host=api.openai.com", false,
+    "", false
+]
+| extend RemoteHost = NormalizeHost(RemoteUrl)
+| extend Actual = IsAiDestination(RemoteHost)
+| where Actual != Expected
