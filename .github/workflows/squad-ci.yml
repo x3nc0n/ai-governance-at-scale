@@ -1,0 +1,27 @@
+name: Runtime and helper regression checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check demo runtime and deployment parameter contracts
+        run: python scripts/test-demo-app.py
+      - name: Check endpoint hunting pack
+        run: python scripts/test-endpoint-ai-hunts.py
+      - name: Check PowerShell helpers without Azure access
+        shell: pwsh
+        run: ./scripts/test-governance-helpers.ps1
+      - name: Check Bash helpers without Azure access
+        run: bash scripts/test-governance-helpers.sh

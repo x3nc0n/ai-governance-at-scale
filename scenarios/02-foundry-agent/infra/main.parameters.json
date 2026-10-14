@@ -8,14 +8,20 @@
     "appName": {
       "value": "ca-foundry-agent-demo"
     },
-    "managedEnvironmentId": {
-      "value": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aigov-foundation-demo/providers/Microsoft.App/managedEnvironments/cae-aigov-demo"
+    "foundationResourceGroupName": {
+      "value": "rg-aigov-foundation-demo"
     },
-    "identityResourceId": {
-      "value": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aigov-foundation-demo/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-scenario-02"
+    "foundationManagedEnvironmentName": {
+      "value": "replace-with-foundation-environment-name"
     },
-    "identityClientId": {
-      "value": "22222222-2222-2222-2222-222222222222"
+    "foundationContainerRegistryName": {
+      "value": "replace-with-foundation-registry-name"
+    },
+    "foundationAiServicesName": {
+      "value": "replace-with-foundation-ai-services-name"
+    },
+    "containerImageName": {
+      "value": "aigov-demo-app:latest"
     }
   }
 }

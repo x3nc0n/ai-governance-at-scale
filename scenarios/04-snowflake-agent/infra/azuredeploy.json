@@ -1,11 +1,12 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "languageVersion": "2.0",
   "contentVersion": "1.0.0.0",
   "metadata": {
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "303410546103652592"
+      "templateHash": "17361241521877726790"
     }
   },
   "parameters": {
@@ -23,40 +24,18 @@
         "description": "Name of the scenario container app."
       }
     },
-    "managedEnvironmentId": {
+    "foundationResourceGroupName": {
       "type": "string",
+      "defaultValue": "rg-aigov-foundation-demo",
       "metadata": {
-        "description": "Resource ID of the shared managed environment."
+        "description": "Name of the foundation resource group that contains the shared governance estate."
       }
     },
-    "identityResourceId": {
+    "foundationSubscriptionId": {
       "type": "string",
+      "defaultValue": "[subscription().subscriptionId]",
       "metadata": {
-        "description": "Resource ID of the user-assigned identity for this scenario."
-      }
-    },
-    "identityClientId": {
-      "type": "string",
-      "metadata": {
-        "description": "Client ID of the user-assigned identity for this scenario."
-      }
-    },
-    "containerRegistryServer": {
-      "type": "string",
-      "metadata": {
-        "description": "Registry server for the shared demo image."
-      }
-    },
-    "containerRegistryUsername": {
-      "type": "string",
-      "metadata": {
-        "description": "Registry username for the shared demo image."
-      }
-    },
-    "containerRegistryPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Registry password for the shared demo image."
+        "description": "Subscription ID that contains the foundation deployment. Defaults to the current subscription."
       }
     },
     "containerImageName": {
@@ -66,16 +45,54 @@
         "description": "Name of the shared demo image to deploy for this scenario."
       }
     },
+    "foundationManagedEnvironmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the shared managed environment in the foundation resource group."
+      }
+    },
+    "foundationContainerRegistryName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the shared container registry in the foundation resource group."
+      }
+    },
     "foundationAiServicesName": {
       "type": "string",
-      "defaultValue": "ai-services",
       "metadata": {
-        "description": "Name of the shared Azure AI Services account."
+        "description": "Name of the shared Azure AI Services account in the foundation resource group."
       }
     }
   },
-  "resources": [
-    {
+  "variables": {
+    "foundationIdentityName": "id-scenario-04"
+  },
+  "resources": {
+    "managedEnvironment": {
+      "existing": true,
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2024-03-01",
+      "subscriptionId": "[parameters('foundationSubscriptionId')]",
+      "resourceGroup": "[parameters('foundationResourceGroupName')]",
+      "name": "[parameters('foundationManagedEnvironmentName')]"
+    },
+    "scenarioIdentity": {
+      "existing": true,
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "subscriptionId": "[parameters('foundationSubscriptionId')]",
+      "resourceGroup": "[parameters('foundationResourceGroupName')]",
+      "name": "[variables('foundationIdentityName')]"
+    },
+    "containerRegistry": {
+      "existing": true,
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2023-07-01",
+      "subscriptionId": "[parameters('foundationSubscriptionId')]",
+      "resourceGroup": "[parameters('foundationResourceGroupName')]",
+      "name": "[parameters('foundationContainerRegistryName')]"
+    },
+    "containerApp": {
       "type": "Microsoft.App/containerApps",
       "apiVersion": "2024-03-01",
       "name": "[parameters('appName')]",
@@ -83,11 +100,11 @@
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
-          "[format('{0}', parameters('identityResourceId'))]": {}
+          "[format('{0}', extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', parameters('foundationSubscriptionId'), parameters('foundationResourceGroupName')), 'Microsoft.ManagedIdentity/userAssignedIdentities', variables('foundationIdentityName')))]": {}
         }
       },
       "properties": {
-        "managedEnvironmentId": "[parameters('managedEnvironmentId')]",
+        "managedEnvironmentId": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', parameters('foundationSubscriptionId'), parameters('foundationResourceGroupName')), 'Microsoft.App/managedEnvironments', parameters('foundationManagedEnvironmentName'))]",
         "configuration": {
           "ingress": {
             "external": true,
@@ -97,13 +114,13 @@
           "secrets": [
             {
               "name": "acr-password",
-              "value": "[parameters('containerRegistryPassword')]"
+              "value": "[listCredentials('containerRegistry', '2023-07-01').passwords[0].value]"
             }
           ],
           "registries": [
             {
-              "server": "[parameters('containerRegistryServer')]",
-              "username": "[parameters('containerRegistryUsername')]",
+              "server": "[reference('containerRegistry').loginServer]",
+              "username": "[listCredentials('containerRegistry', '2023-07-01').username]",
               "passwordSecretRef": "acr-password"
             }
           ]
@@ -112,7 +129,7 @@
           "containers": [
             {
               "name": "snowflake-agent",
-              "image": "[format('{0}/{1}', parameters('containerRegistryServer'), parameters('containerImageName'))]",
+              "image": "[format('{0}/{1}', reference('containerRegistry').loginServer, parameters('containerImageName'))]",
               "env": [
                 {
                   "name": "SCENARIO_ID",
@@ -124,7 +141,7 @@
                 },
                 {
                   "name": "AZURE_CLIENT_ID",
-                  "value": "[parameters('identityClientId')]"
+                  "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', parameters('foundationSubscriptionId'), parameters('foundationResourceGroupName')), 'Microsoft.ManagedIdentity/userAssignedIdentities', variables('foundationIdentityName')), '2023-01-31').clientId]"
                 },
                 {
                   "name": "SCENARIO_LABEL",
@@ -142,9 +159,12 @@
             }
           ]
         }
-      }
+      },
+      "dependsOn": [
+        "containerRegistry"
+      ]
     }
-  ],
+  },
   "outputs": {
     "containerAppName": {
       "type": "string",
@@ -152,11 +172,11 @@
     },
     "containerAppFqdn": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('appName')), '2024-03-01').configuration.ingress.fqdn]"
+      "value": "[reference('containerApp').configuration.ingress.fqdn]"
     },
     "identityPrincipalId": {
       "type": "string",
-      "value": "[reference(parameters('identityResourceId'), '2023-01-31').principalId]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', parameters('foundationSubscriptionId'), parameters('foundationResourceGroupName')), 'Microsoft.ManagedIdentity/userAssignedIdentities', variables('foundationIdentityName')), '2023-01-31').principalId]"
     }
   }
 }

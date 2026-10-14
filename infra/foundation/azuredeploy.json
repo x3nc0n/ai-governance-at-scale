@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.44.1.10279",
-      "templateHash": "6311830131258617545"
+      "templateHash": "12453066699757282661"
     }
   },
   "parameters": {
@@ -145,6 +145,34 @@
       "metadata": {
         "description": "Whether the governed API requires an APIM subscription key."
       }
+    },
+    "enablePurview": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Whether to deploy a shared Microsoft Purview account for AI governance controls and lineage."
+      }
+    },
+    "purviewAccountName": {
+      "type": "string",
+      "defaultValue": "[format('pview-aigov-{0}', take(uniqueString(resourceGroup().id), 12))]",
+      "metadata": {
+        "description": "Name of the Purview account resource."
+      }
+    },
+    "purviewManagedResourceGroupName": {
+      "type": "string",
+      "defaultValue": "[format('rg-aigov-purview-{0}', take(uniqueString(resourceGroup().id), 8))]",
+      "metadata": {
+        "description": "Managed resource group name for the Purview account."
+      }
+    },
+    "enableGovernanceDiagnostics": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Whether to enable shared governance diagnostics for AI Services and APIM to the shared Log Analytics workspace."
+      }
     }
   },
   "variables": {
@@ -191,6 +219,20 @@
         "enablePurgeProtection": true,
         "softDeleteRetentionInDays": 90,
         "createMode": "default",
+        "publicNetworkAccess": "Enabled"
+      }
+    },
+    {
+      "condition": "[parameters('enablePurview')]",
+      "type": "Microsoft.Purview/accounts",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[parameters('purviewAccountName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "managedResourceGroupName": "[parameters('purviewManagedResourceGroupName')]",
         "publicNetworkAccess": "Enabled"
       }
     },
@@ -352,6 +394,58 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), parameters('governedApiName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableGovernanceDiagnostics')]",
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('aiServicesName'))]",
+      "name": "[format('diag-{0}', parameters('aiServicesName'))]",
+      "properties": {
+        "workspaceId": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.workspaceId.value]",
+        "logs": [
+          {
+            "categoryGroup": "allLogs",
+            "enabled": true
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', parameters('aiServicesName'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'monitoring')]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableGovernanceDiagnostics')]",
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]",
+      "name": "[format('diag-{0}', parameters('apimName'))]",
+      "properties": {
+        "workspaceId": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.workspaceId.value]",
+        "logs": [
+          {
+            "categoryGroup": "allLogs",
+            "enabled": true
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'monitoring')]"
       ]
     },
     {
@@ -608,6 +702,14 @@
     "apimSubscriptionName": {
       "type": "string",
       "value": "aigov-demo-subscription"
+    },
+    "purviewAccountName": {
+      "type": "string",
+      "value": "[if(parameters('enablePurview'), parameters('purviewAccountName'), '')]"
+    },
+    "purviewAccountId": {
+      "type": "string",
+      "value": "[if(parameters('enablePurview'), resourceId('Microsoft.Purview/accounts', parameters('purviewAccountName')), '')]"
     },
     "scenarioIdentityResourceIds": {
       "type": "array",

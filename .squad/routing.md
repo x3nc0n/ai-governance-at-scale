@@ -1,19 +1,19 @@
 # Work Routing
 
-How to decide who handles what.
+How to decide who handles work for ai-governance-at-scale.
 
 ## Routing Table
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| {domain 1} | {Name} | {example tasks} |
-| {domain 2} | {Name} | {example tasks} |
-| {domain 3} | {Name} | {example tasks} |
-| Code review | {Name} | Review PRs, check quality, suggest improvements |
-| Testing | {Name} | Write tests, find edge cases, verify fixes |
-| Scope & priorities | {Name} | What to build next, trade-offs, decisions |
+| Architecture and scope | Morpheus | Reference architecture, module boundaries, scenario consistency |
+| Azure infrastructure | Trinity | Bicep/ARM, modules, parameters, Deploy to Azure buttons |
+| AI governance and security | Neo | Agent ID, APIM/MCP policies, Purview, Defender, Agent 365 |
+| Documentation and narrative | Tank | Scenario READMEs, diagrams, customer-facing story |
+| Validation and review | Switch | Bicep build/lint, ARM validation, deployment smoke tests |
+| Claims and capability verification | Fact Checker | Validate Azure product claims and links |
 | Session logging | Scribe | Automatic — never needs routing |
-| RAI review | Rai | Content safety, bias checks, credential detection, ethical review |
+| RAI review | Rai | Content safety, privacy, credential detection, ethical review |
 
 ## Issue Routing
 

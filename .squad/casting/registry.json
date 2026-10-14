@@ -1,3 +1,39 @@
 {
-  "agents": {}
+  "agents": {
+    "solution-lead": {
+      "persistent_name": "Morpheus",
+      "universe": "The Matrix",
+      "created_at": "2026-08-04T18:11:37.468-05:00",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "azure-iac-engineer": {
+      "persistent_name": "Trinity",
+      "universe": "The Matrix",
+      "created_at": "2026-08-04T18:11:37.468-05:00",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "ai-governance-security-architect": {
+      "persistent_name": "Neo",
+      "universe": "The Matrix",
+      "created_at": "2026-08-04T18:11:37.468-05:00",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "technical-storyteller": {
+      "persistent_name": "Tank",
+      "universe": "The Matrix",
+      "created_at": "2026-08-04T18:11:37.468-05:00",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "deployment-validator": {
+      "persistent_name": "Switch",
+      "universe": "The Matrix",
+      "created_at": "2026-08-04T18:11:37.468-05:00",
+      "legacy_named": false,
+      "status": "active"
+    }
+  }
 }
