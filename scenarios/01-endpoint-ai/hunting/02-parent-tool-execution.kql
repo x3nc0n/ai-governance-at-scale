@@ -1,0 +1,21 @@
+// Only direct parent evidence qualifies; a child's AI-looking command line does not.
+let Lookback = 7d;
+let AiText = @"(?i)(^|[^a-z0-9_])(claude|anthropic|codex|openai|chatgpt|copilot|gemini|cursor|windsurf|cline|kiro|opencode|ollama|lm[- ]?studio|perplexity|openclaw|qwen|deepseek)([^a-z0-9_]|$)";
+let Evidence = (name:string, path:string, command:string) {
+    case(name in~ ("claude", "claude.exe", "codex", "codex.exe", "copilot", "copilot.exe", "gemini", "gemini.exe", "cursor", "cursor.exe", "windsurf", "windsurf.exe", "kiro", "kiro.exe", "opencode", "opencode.exe", "ollama", "ollama.exe", "lmstudio", "lmstudio.exe", "lm-studio", "lm-studio.exe", "LM Studio", "LM Studio.exe", "openclaw", "openclaw.exe"), "image-name-candidate",
+        strcat(path, " ", command) matches regex AiText, "path-or-commandline-candidate", "none")
+};
+DeviceProcessEvents
+| where Timestamp > ago(Lookback)
+| where ActionType == "ProcessCreated"
+| where FileName in~ ("powershell.exe", "powershell", "pwsh.exe", "pwsh", "cmd.exe",
+    "bash.exe", "bash", "sh", "zsh", "wsl.exe", "python.exe", "python", "python3.exe", "python3",
+    "node.exe", "node", "git.exe", "git", "curl.exe", "curl", "wget.exe", "wget",
+    "az.exe", "az", "kubectl.exe", "kubectl", "terraform.exe", "terraform")
+| extend ParentEvidence = Evidence(InitiatingProcessFileName, InitiatingProcessFolderPath, InitiatingProcessCommandLine)
+| where ParentEvidence != "none"
+| project Timestamp, DeviceId, DeviceName, ReportId, ActionType,
+    FileName, FolderPath, ProcessId, ProcessCreationTime, ProcessCommandLine, SHA1,
+    AccountUpn, AccountDomain, AccountName, ParentEvidence,
+    InitiatingProcessFileName, InitiatingProcessFolderPath, InitiatingProcessId,
+    InitiatingProcessCreationTime, InitiatingProcessCommandLine, InitiatingProcessAccountUpn

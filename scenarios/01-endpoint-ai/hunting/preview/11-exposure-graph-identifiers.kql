@@ -1,0 +1,4 @@
+// Inspect entity identifier structure after verifying graph access; never join NodeId to DeviceId.
+ExposureGraphNodes
+| project NodeId, NodeLabel, NodeName, Categories, EntityIds
+| take 100

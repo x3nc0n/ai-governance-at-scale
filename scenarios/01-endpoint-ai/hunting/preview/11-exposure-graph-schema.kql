@@ -1,0 +1,4 @@
+// Optional preview inspection only. No assumed AI labels, edge labels, or MDE DeviceId mapping.
+ExposureGraphEdges
+| summarize EdgeCount = count() by SourceNodeLabel, EdgeLabel, TargetNodeLabel
+| top 100 by EdgeCount desc

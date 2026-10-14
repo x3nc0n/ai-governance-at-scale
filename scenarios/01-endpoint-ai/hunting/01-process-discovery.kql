@@ -1,0 +1,18 @@
+// Hunting only: names and text are candidates, not authenticated agent identities.
+let Lookback = 7d;
+let AiText = @"(?i)(^|[^a-z0-9_])(claude|anthropic|codex|openai|chatgpt|copilot|gemini|cursor|windsurf|cline|kiro|opencode|ollama|lm[- ]?studio|perplexity|openclaw|qwen|deepseek)([^a-z0-9_]|$)";
+let Evidence = (name:string, path:string, command:string) {
+    case(name in~ ("claude", "claude.exe", "codex", "codex.exe", "copilot", "copilot.exe", "gemini", "gemini.exe", "cursor", "cursor.exe", "windsurf", "windsurf.exe", "kiro", "kiro.exe", "opencode", "opencode.exe", "ollama", "ollama.exe", "lmstudio", "lmstudio.exe", "lm-studio", "lm-studio.exe", "LM Studio", "LM Studio.exe", "openclaw", "openclaw.exe"), "image-name-candidate",
+        strcat(path, " ", command) matches regex AiText, "path-or-commandline-candidate", "none")
+};
+DeviceProcessEvents
+| where Timestamp > ago(Lookback)
+| where ActionType == "ProcessCreated"
+| extend ProcessEvidence = Evidence(FileName, FolderPath, ProcessCommandLine),
+    ParentEvidence = Evidence(InitiatingProcessFileName, InitiatingProcessFolderPath, InitiatingProcessCommandLine)
+| where ProcessEvidence != "none" or ParentEvidence != "none"
+| project Timestamp, DeviceId, DeviceName, ReportId, ActionType,
+    FileName, FolderPath, ProcessId, ProcessCreationTime, ProcessCommandLine, SHA1,
+    AccountUpn, AccountDomain, AccountName, ProcessEvidence, ParentEvidence,
+    InitiatingProcessFileName, InitiatingProcessFolderPath, InitiatingProcessId,
+    InitiatingProcessCreationTime, InitiatingProcessCommandLine, InitiatingProcessAccountUpn

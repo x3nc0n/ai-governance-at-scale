@@ -1,0 +1,32 @@
+// Hunting summary only. "Unclassified" means no local name/text match, not malicious.
+let Lookback = 7d;
+let AiText = @"(?i)(^|[^a-z0-9_])(claude|anthropic|codex|openai|chatgpt|copilot|gemini|cursor|windsurf|cline|kiro|opencode|ollama|lm[- ]?studio|perplexity|openclaw|qwen|deepseek)([^a-z0-9_]|$)";
+let Evidence = (name:string, path:string, command:string) {
+    case(name in~ ("claude", "claude.exe", "codex", "codex.exe", "copilot", "copilot.exe", "gemini", "gemini.exe", "cursor", "cursor.exe", "windsurf", "windsurf.exe", "kiro", "kiro.exe", "opencode", "opencode.exe", "ollama", "ollama.exe", "lmstudio", "lmstudio.exe", "lm-studio", "lm-studio.exe", "LM Studio", "LM Studio.exe", "openclaw", "openclaw.exe"), "image-name-candidate",
+        strcat(path, " ", command) matches regex AiText, "path-or-commandline-candidate", "none")
+};
+let NormalizeHost = (raw:string) {
+    let value = trim(@"\s+", raw);
+    let absolute = case(value startswith "//", strcat("https:", value),
+        value contains "://", value, strcat("https://", value));
+    trim_end(@"\.+", tolower(tostring(parse_url(absolute).Host)))
+};
+let IsAiDestination = (host:string) {
+    host in ("openai.com", "chatgpt.com", "anthropic.com", "claude.ai", "generativelanguage.googleapis.com")
+    or host endswith ".openai.com" or host endswith ".chatgpt.com"
+    or host endswith ".anthropic.com" or host endswith ".claude.ai"
+    or host endswith ".generativelanguage.googleapis.com"
+};
+DeviceNetworkEvents
+| where Timestamp > ago(Lookback)
+| extend RemoteHost = NormalizeHost(RemoteUrl),
+    ActorEvidence = Evidence(InitiatingProcessFileName, InitiatingProcessFolderPath, InitiatingProcessCommandLine)
+| where IsAiDestination(RemoteHost)
+| where ActorEvidence == "none"
+| summarize EventCount = count(), FirstSeen = min(Timestamp), LastSeen = max(Timestamp),
+    ApproxDevices = dcount(DeviceId),
+    ApproxActorUpns = dcount(InitiatingProcessAccountUpn) - iff(countif(isempty(InitiatingProcessAccountUpn)) > 0, 1, 0),
+    MissingActorUpnEvents = countif(isempty(InitiatingProcessAccountUpn)),
+    SampleDevices = make_set(DeviceName, 20), SamplePaths = make_set(InitiatingProcessFolderPath, 20)
+    by RemoteHost, InitiatingProcessFileName, ActorEvidence
+| order by EventCount desc
