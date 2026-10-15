@@ -14,7 +14,7 @@ This repository shows how to close that gap without rewriting every agent.
 
 ## The Architecture
 
-All four entry points terminate at the same governed control plane:
+The target architecture brings all four entry points to the same governed control plane. The current alpha demos implement only the bounded paths documented below, not every control in this diagram:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -37,6 +37,8 @@ All four entry points terminate at the same governed control plane:
 
 ## Foundation — Deploy First
 
+**Separate advanced gateway infrastructure (alpha):** [Deploy the schema-backed AI Gateway Bicep/ARM entrypoint](infra/foundation/advanced/README.md). Its Deploy to Azure button targets the current feature branch **pending merge**. It provisions the gateway resource and system identity, not tool policies, consent, threat protection or native clients; the existing HTTP foundation below is unchanged.
+
 > ⚠️ **All scenario Deploy to Azure buttons require the foundation to be deployed first.** Foundation outputs (resource IDs, endpoint URLs, identity principal IDs) are required inputs to every scenario template.
 
 [![Deploy Foundation to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmain%2Finfra%2Ffoundation%2Fazuredeploy.json)
@@ -48,7 +50,7 @@ All four entry points terminate at the same governed control plane:
 **Foundation provisions (ARM-deployed):**
 | Azure Resource | Purpose |
 |----------------|---------|
-| API Management (Developer SKU) | Central AI gateway with token metering, rate limits, and a sample governed API policy set |
+| API Management (Developer SKU) | Shared HTTP gateway with sample rate-limit and correlation policies; AI token controls are target capabilities |
 | Container Apps Managed Environment | Shared runtime for all four scenario apps |
 | Azure Container Registry | Shared registry for the scenario demo images and governance metadata app |
 | Azure AI Services (S0 multi-model) | Shared model inference endpoint |
@@ -79,11 +81,17 @@ These are intentionally off by default to keep the foundation deployable on subs
 
 **Alpha implementation:** The first three scenario apps return deterministic sample guidance; scenario 03 also calls scenario 01 through APIM. They are not native Foundry/Copilot Studio agents, do not invoke an LLM, and do not demonstrate full enforcement of the architectural capabilities listed below. Public app ingress is not caller-authenticated. See [deployment parameters and limitations](docs/deployment.md); do not send sensitive data.
 
+## Release status
+
+**All current demo profiles remain alpha.** Under the [release policy and current profile matrix](docs/release-policy.md), required preview features or deployment APIs cap a profile at alpha; unknown lifecycle blocks beta eligibility. Verified GA-only dependencies make a working, validated profile eligible for beta, not automatically beta. Independently isolated preview extensions retain their own alpha status. The current default foundation uses preview resource APIs, so a GA-only baseline has not been established.
+
+Scenario 04 is a deterministic demo shell, not an implemented Snowflake integration. AI Gateway resource IaC is present and offline checked; end-to-end Agent 365/APIM MCP and gateway tool governance remain planned/not verified, not released capabilities. Maturity labels do not imply production support or an SLA.
+
 ---
 
 ## Scenarios
 
-| # | Scenario | Entry Point | Deploy |
+| # | Scenario | Target Entry Point (not current implementation) | Deploy |
 |---|----------|------------|--------|
 | 01 | [Endpoint / Client AI](scenarios/01-endpoint-ai/README.md) | Claude Code, Cursor, Windsurf, VS Code extensions → Agent 365 SDK / Entra Agent ID → APIM → Foundry / MCP | [![Deploy Scenario 01](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmain%2Fscenarios%2F01-endpoint-ai%2Finfra%2Fazuredeploy.json) |
 | 02 | [Foundry Hosted Agent](scenarios/02-foundry-agent/README.md) | Foundry-prompted/hosted agent → Entra Agent ID → APIM → Snowflake MCP + M365 MCP | [![Deploy Scenario 02](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmain%2Fscenarios%2F02-foundry-agent%2Finfra%2Fazuredeploy.json) |
@@ -96,7 +104,7 @@ These are intentionally off by default to keep the foundation deployable on subs
 
 ## Why Foundation First?
 
-The foundation is not boilerplate — it is the governance plane. APIM enforces token limits, rate policies, and content-safety checks for every request regardless of where it originates. The shared Foundry project provides audit trails and evaluation pipelines. The Container Apps environment gives each scenario a governed runtime with consistent identity and networking. Deploying a scenario into a different environment removes those guarantees.
+The foundation supplies shared gateway, runtime, identity and monitoring resources for the target governance plane. The current sample policies do not implement the full token-limit/content-safety pipeline, and public app ingress can bypass APIM. Foundry project/model deployment is optional and does not establish runtime evaluation or model use. Resource sharing is not proof of end-to-end enforcement; evaluate the selected [release profile](docs/release-policy.md) and its documented limitations.
 
 **Deployment sequence:**
 1. Deploy foundation → note the output values (APIM gateway URL, Container Apps environment resource ID, AI Services endpoint, Key Vault name, identity principal IDs)
@@ -119,6 +127,7 @@ scenarios/
 docs/
   architecture.md       # Full architecture reference
   deployment.md         # Deployment operations, validation, and teardown rules
+  release-policy.md     # Per-profile maturity, lifecycle and promotion evidence
   prerequisites/        # Tenant-level setup guides (Entra Agent ID, bootstrapping)
   concepts/             # Identity model, terminology, governance concepts
 scripts/
@@ -138,23 +147,27 @@ For the full narrative, see [docs/scenario-narrative.md](docs/scenario-narrative
 
 ## Governance Capabilities at a Glance
 
-| Capability | Mechanism | Status |
-|-----------|-----------|--------|
-| Agent identity lifecycle | Microsoft Entra Agent ID | GA (all Entra customers); extended governance requires E7/Agent 365 |
-| API gateway policy enforcement | Azure APIM (Developer SKU) | GA |
-| Token metering and rate limiting | APIM AI policies | GA |
-| Content safety | APIM + Azure AI Content Safety integration | GA |
-| Semantic caching | APIM Standard v2 or higher | Not on Developer SKU default; upgrade via parameter |
-| MCP tool governance | APIM AI Gateway tier | **Public Preview** — feature-flagged (`enableMcpGovernance=true`) |
-| Data classification and lineage | Microsoft Purview DSPM for AI | Core capabilities available; individual features vary — see scenario docs |
-| Threat detection | Microsoft Defender for AI Services | Agent-specific protections in **Public Preview** |
-| Agent lifecycle orchestration | Agent 365 | GA |
+Vendor lifecycle is not implementation maturity. Except for the sourced preview profiles in the [release policy](docs/release-policy.md), exact feature/configuration lifecycle remains unverified here and must be established before beta eligibility.
+
+| Target capability | Mechanism | Repository availability |
+|-------------------|-----------|-------------------------|
+| Agent identity lifecycle | Microsoft Entra Agent ID | Tenant setup guidance; runtime integration not demonstrated |
+| HTTP gateway policies | Azure APIM | Sample rate-limit/correlation policies and scenario 01 subscription-key route |
+| Token metering / content safety | APIM AI policies / Content Safety | Target controls, not implemented in sample policies |
+| Semantic caching | APIM | Not implemented; changing SKU alone does not enable it |
+| MCP server inventory/blocking | Agent 365 + supported APIM v2 | Planned integration preview, not implemented |
+| Individual-tool governance | AI Gateway tier | Separate gateway resource IaC present; runtime tool governance planned/not verified |
+| Classification and lineage | Purview DSPM for AI | Optional account resource is not classification or DSPM configuration |
+| Threat inspection | Defender / Purview evaluation | Not implemented; bootstrap CSPM is not runtime protection |
+| Agent lifecycle orchestration | Agent 365 | Tenant prerequisite/target integration, not deployed by templates |
 
 ---
 
 ## Contributing and Validation Rules
 
 All Azure changes must flow through templates. See [`docs/deployment.md`](docs/deployment.md) for the enforced validation loop and the explicit prohibition on one-off Azure mutations.
+
+Release claims and promotions must follow the [per-profile release policy](docs/release-policy.md); compile/offline checks alone do not establish beta eligibility.
 
 ## License and Use
 

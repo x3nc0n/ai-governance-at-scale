@@ -15,6 +15,8 @@ jobs:
         run: az bicep install --version v0.44.1
       - name: Compile foundation template
         run: az bicep build --file infra/foundation/main.bicep --outfile infra/foundation/azuredeploy.json
+      - name: Compile advanced gateway infrastructure template
+        run: az bicep build --file infra/foundation/advanced/main.bicep --outfile infra/foundation/advanced/azuredeploy.json
       - name: Compile scenario 01 template
         run: az bicep build --file scenarios/01-endpoint-ai/infra/main.bicep --outfile scenarios/01-endpoint-ai/infra/azuredeploy.json
       - name: Compile scenario 02 template
@@ -24,4 +26,4 @@ jobs:
       - name: Compile scenario 04 template
         run: az bicep build --file scenarios/04-snowflake-agent/infra/main.bicep --outfile scenarios/04-snowflake-agent/infra/azuredeploy.json
       - name: Fail if ARM files changed
-        run: git diff --exit-code -- infra/foundation/azuredeploy.json scenarios/01-endpoint-ai/infra/azuredeploy.json scenarios/02-foundry-agent/infra/azuredeploy.json scenarios/03-copilot-studio/infra/azuredeploy.json scenarios/04-snowflake-agent/infra/azuredeploy.json
+        run: git diff --exit-code -- infra/foundation/azuredeploy.json infra/foundation/advanced/azuredeploy.json scenarios/01-endpoint-ai/infra/azuredeploy.json scenarios/02-foundry-agent/infra/azuredeploy.json scenarios/03-copilot-studio/infra/azuredeploy.json scenarios/04-snowflake-agent/infra/azuredeploy.json

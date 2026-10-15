@@ -2,6 +2,10 @@
 
 This scenario deploys a rule-based policy-review demo in a lightweight Container App. It returns illustrative governance recommendations; it is not a Foundry-hosted agent, does not invoke a model, and does not evaluate live policy state.
 
+## Release status
+
+**Alpha HTTP policy-review demo**, not a native Foundry integration. It inherits selected foundation dependencies; their lifecycle and this demo's evidence do not establish beta eligibility. See the [release policy and current profiles](../../docs/release-policy.md).
+
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fx3nc0n%2Fai-governance-at-scale%2Fmain%2Fscenarios%2F02-foundry-agent%2Finfra%2Fazuredeploy.json)
 
 The agent exposes `/invoke` and returns a structured policy-review response that is easy to present in a demo.

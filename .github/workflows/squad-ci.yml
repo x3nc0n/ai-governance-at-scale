@@ -18,6 +18,8 @@ jobs:
           python-version: '3.12'
       - name: Check demo runtime and deployment parameter contracts
         run: python scripts/test-demo-app.py
+      - name: Check advanced gateway infrastructure contract and deployment button
+        run: python -B scripts/test-advanced-gateway.py
       - name: Check endpoint hunting pack
         run: python scripts/test-endpoint-ai-hunts.py
       - name: Check PowerShell helpers without Azure access

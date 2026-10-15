@@ -4,6 +4,8 @@
 
 This document describes the full reference architecture for `ai-governance-at-scale`. For deployment steps and button URLs, see [deployment.md](deployment.md). For the Entra Agent ID identity model, see [concepts/agent-identity-model.md](concepts/agent-identity-model.md).
 
+**Target architecture, not delivered capability:** the diagrams, identity flows, policy pipeline and observability signals describe intended integrations. ARM labels indicate intended resource surfaces, not proof that Agent ID objects or MCP integrations are template-deployed. Current profiles remain alpha; see the [release policy and implementation matrix](release-policy.md). Tenant prerequisites, product lifecycle and actual runtime evidence are assessed separately.
+
 ---
 
 ## High-Level Architecture
@@ -61,17 +63,19 @@ The foundation is the permanent shared infrastructure that all scenarios depend 
 
 | Resource | Azure Service | SKU | Role |
 |----------|--------------|-----|------|
-| AI Gateway | Azure API Management | Developer (default); Standard v2 via parameter | Central policy enforcement point for all agent traffic |
+| AI Gateway | Azure API Management | Developer (default); Standard v2 via parameter | Shared HTTP gateway; public app ingress can bypass it |
 | Container Apps Environment | Container Apps Managed Environment | Consumption | Shared runtime for all four scenario apps |
 | AI Services | Microsoft.CognitiveServices/accounts (AI Services multi-model) | S0 | Shared model inference |
-| Foundry Project | Microsoft.CognitiveServices/accounts/projects | — | Prompt management, evaluation, catalog |
-| gpt-4.1-mini | CognitiveServices model deployment | Standard, 10K TPM | Default LLM; parameterized |
+| Foundry Project | Microsoft.CognitiveServices/accounts/projects | — | Optional project resource; disabled by default |
+| gpt-4.1-mini | CognitiveServices model deployment | Standard, 10K TPM | Optional model deployment; disabled by default; demos do not invoke it |
 | Log Analytics Workspace | Microsoft.OperationalInsights/workspaces | Per-GB | Centralized logs |
 | Application Insights | Microsoft.Insights/components | — | Distributed tracing |
 | Key Vault | Microsoft.KeyVault/vaults | Standard | Secret storage |
 | User-Assigned Identities (×4) | Microsoft.ManagedIdentity/userAssignedIdentities | — | Per-scenario workload identity |
 
 ### APIM Policy Architecture
+
+This is the target pipeline. Current sample policies provide rate limiting/correlation, and scenario 01 adds a subscription-key HTTP route; they do not deliver the full pipeline below.
 
 ```
 Request → APIM Inbound Pipeline
@@ -87,9 +91,9 @@ Response → APIM Outbound Pipeline
   └── Return to agent
 ```
 
-> **Developer SKU limitations:** No semantic caching, no VNet integration, no SLA. Set `apimSkuName=StandardV2` for production use. Semantic caching requires Standard v2 or higher.
+> **SKU selection is not release maturity:** Developer is the default demo tier and has no SLA. `apimSkuName=StandardV2` selects a different tier, not a production-ready or beta profile, and does not implement missing policies or caching. Verify exact feature/tier availability for the intended configuration.
 
-> **MCP governance (Public Preview):** Controlled by `enableMcpGovernance` parameter (default: `false`). When enabled, adds MCP tool-level routing and governance policies. Requires an APIM tier that supports the AI Gateway preview feature.
+> **MCP governance is planned, not implemented.** No `enableMcpGovernance` parameter exists. [Separate AI Gateway resource IaC](../infra/foundation/advanced/README.md) is implemented and offline checked, but Agent 365/APIM v2 server governance and AI Gateway tier tool controls remain preview-dependent future runtime profiles; Developer is not the supported integration path. See [profile boundaries and lifecycle sources](release-policy.md#selected-foundation-dependencies).
 
 ---
 
@@ -203,7 +207,7 @@ Agent Identity Blueprint
 
 ## Observability Architecture
 
-All scenarios emit telemetry to the shared foundation Log Analytics workspace and Application Insights instance.
+The target signals below are not evidence that all scenarios emit them. Current monitoring resources and diagnostic settings do not establish model evaluation traces, token metrics, Defender inspection or Purview events. See [deployment evidence boundaries](deployment.md#release-profiles-and-evidence).
 
 | Signal | Source | Destination |
 |--------|--------|------------|
@@ -221,30 +225,24 @@ All scenarios emit telemetry to the shared foundation Log Analytics workspace an
 | Parameter | Default | Notes |
 |-----------|---------|-------|
 | Location | East US 2 (`eastus2`) | All resources |
-| APIM SKU | Developer | No SLA, no semantic caching. Use `StandardV2` for production |
+| APIM SKU | Developer | Demo default, no SLA; selecting `StandardV2` alone does not establish beta or production readiness |
 | Container Apps vCPU | 0.25 per scenario app | 1 vCPU total at baseline |
-| gpt-4.1-mini capacity | 10K TPM | Parameterized; adjust for load |
+| gpt-4.1-mini capacity | 10K TPM | Only when optional model deployment is enabled; not used by current demos |
 
 ---
 
 ## Governance, Security, and Compliance Capabilities
 
-| Capability | Product | Status |
-|-----------|---------|--------|
-| Agent identity and lifecycle | Microsoft Entra Agent ID | GA |
-| Agent lifecycle orchestration | Agent 365 | GA |
-| API policy enforcement | Azure APIM | GA |
-| Content safety | APIM + Azure AI Content Safety | GA |
-| Semantic caching | APIM Standard v2+ | GA (not available on Developer SKU) |
-| MCP tool governance | APIM AI Gateway tier | **Public Preview** |
-| Data governance and lineage | Purview DSPM for AI | Core GA; individual features vary |
-| Threat detection (agents) | Defender for AI Services | **Public Preview** |
+See the canonical [current profile matrix](release-policy.md#current-profiles) for maturity, selected dependency lifecycle, evidence gaps and support boundaries. Exact product feature/SKU lifecycle is unverified unless sourced there; a GA product label is not proof of an implemented control.
+
+Current templates provide resources and sample HTTP policies, not full Agent ID lifecycle, Agent 365 orchestration, Content Safety, semantic caching, MCP governance, Purview classification or Defender runtime inspection. The two gateway runtime-governance profiles remain distinct preview-dependent plans; the separate advanced gateway resource has Bicep/ARM, not runtime enforcement. The direct foundation defaults also use preview resource APIs; this does not mean the entire parent products are preview.
 
 ---
 
 ## Related Documentation
 
 - [Deployment Operations and Rules](deployment.md)
+- [Release Policy and Current Profiles](release-policy.md)
 - [Entra Agent ID Prerequisites](prerequisites/entra-agent-id.md)
 - [Tenant Bootstrap Guide](prerequisites/tenant-bootstrap.md)
 - [Agent Identity Model (Authoritative)](concepts/agent-identity-model.md)

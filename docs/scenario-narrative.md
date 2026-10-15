@@ -1,6 +1,6 @@
 # Unified governance narrative
 
-This repository demonstrates one governed AI estate with four entry points.
+This repository presents a target architecture for one governed AI estate with four entry points. The implemented alpha demos cover only the bounded behaviors below; the entry-point descriptions are target integrations, not evidence that each path is delivered.
 
 ## One estate, four entry points
 
@@ -22,7 +22,7 @@ This repository demonstrates one governed AI estate with four entry points.
 
 ## Shared control plane
 
-All four scenarios share the same foundational controls:
+The target shared controls are listed below. Current deployments share Azure runtime, identities and monitoring resources, but do not establish the full Agent ID lifecycle or end-to-end policy enforcement:
 
 - Microsoft Entra Agent ID lifecycle
 - Azure API Management policy enforcement
@@ -31,6 +31,8 @@ All four scenarios share the same foundational controls:
 - a common story of identity, security, monitoring, and auditability
 
 ## Demo agent behaviors
+
+All current profiles remain **alpha** under the [release policy](release-policy.md). Dependency lifecycle, implementation maturity and validation evidence are separate. Scenario 04 is a deterministic shell; Snowflake integration and MCP/AI Gateway runtime-governance profiles are planned, not implemented. Separate [gateway resource IaC](../infra/foundation/advanced/README.md) is present and offline checked, not evidence of those integrations.
 
 The first three scenarios deploy deterministic demonstrations, not LLM-backed agents or native Foundry/Copilot Studio integrations:
 

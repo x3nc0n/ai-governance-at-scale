@@ -1,9 +1,15 @@
 # Azure Deployment Plan
 
-> **Status:** Validated
+> **Status:** Prepared; offline validated only.
+>
+> **Current scope (2026-10-15):** Add a separate resource-group-scoped `Microsoft.ApiManagement/aigateways@2026-09-01-preview` Bicep/ARM entrypoint, Deploy to Azure button, static schema checks, and CI drift checks. Gateway infrastructure is a separate milestone from end-to-end governed alpha. No cloud validation or deployment is performed in this task.
+>
+> **Historical plan:** The earlier “Validated” status applied only to the historical foundation work below, not to the new gateway resource or advanced runtime governance.
+>
+> **Execution result:** Separate gateway Bicep, generated ARM, safe parameters, branch-bound Deploy to Azure button, pinned compile/drift CI and focused static tests are implemented. Bicep 0.44.1 compiles with BCP081 (preview resource types absent from its catalog); the writable shape is checked against a focused projection of the pinned REST specification. Ten gateway static tests and twelve demo regressions pass. No Azure validation, deployment, login or tenant changes were performed. Tool publication/policy interfaces, live networking, delegated clients, cloud Block-mode enforcement and full alpha acceptance remain pending.
 
 Generated: 2026-08-04T18:41:00-05:00
-Last Updated: 2026-08-04T19:33:00-05:00
+Last Updated: 2026-10-15
 
 ---
 
@@ -197,10 +203,10 @@ The following terms must be validated against current Microsoft documentation at
 | Classification | Reference Architecture / POC |
 | Scale | Medium (four scenarios, shared services) |
 | Budget | Cost-Optimized (reference/demo workloads) |
-| **Subscription** | SC-OnlineLZ-00 (`6a170127-f4d5-4706-af95-e957af9cbcff`) |
-| **Tenant** | `ef4ecf0b-a160-444b-a405-ce3bf1f98752` |
+| **Subscription** | Supplied locally at deployment time; not recorded here |
+| **Tenant** | Supplied locally at deployment time; not recorded here |
 | **Location** | East US 2 (`eastus2`) |
-| **Deployment User** | `jospaid@MngEnvMCAP643271.onmicrosoft.com` |
+| **Deployment User** | Authenticated operator; not recorded here |
 
 ---
 
@@ -285,7 +291,7 @@ All names are parameters with these defaults. Users may override via Bicep param
 
 ## 6. Provisioning Limit Checklist
 
-> **Source:** Quota checks performed by `jospaid@MngEnvMCAP643271.onmicrosoft.com` against subscription SC-OnlineLZ-00 (`6a170127-f4d5-4706-af95-e957af9cbcff`) in East US 2 on 2026-08-04.
+> **Source:** Historical quota checks against the then-selected subscription in East US 2 on 2026-08-04. Personal account and subscription identifiers are intentionally omitted; these historical checks do not validate the new gateway.
 
 ### Subscription-Level Quotas
 

@@ -1,0 +1,61 @@
+{
+  "sourceCommit": "2335fe5db98171e7a78d08e712920b1869c536ce",
+  "sourcePath": "specification/apimanagement/resource-manager/Microsoft.ApiManagement/AIGateway/preview/2026-09-01-preview/openapi.json",
+  "sourceSha256": "eaa5e00f88f8feb53b585121c80b0e8d68bd8d2c9410ebd38d5fa4ce1c546fba",
+  "commonTypesPath": "specification/common-types/resource-management/v6/types.json",
+  "commonTypesSha256": "5bdcf9b5ed1ea563367452e265e7ad60b411b1fbbbc20b8ba3ab7854d1ca624f",
+  "identityPath": "specification/common-types/resource-management/v6/managedidentity.json",
+  "examplePath": "specification/apimanagement/resource-manager/Microsoft.ApiManagement/AIGateway/preview/2026-09-01-preview/examples/AiGatewayCreate.json",
+  "note": "Focused create-request projection, not the full provider schema. Required/readonly/mutability fields come from named source definitions and inherited common types. SKU AIGateway comes from the create example, not a schema enum. Unknown fields are rejected to freeze this minimal entrypoint's surface.",
+  "resourceType": "Microsoft.ApiManagement/aigateways",
+  "apiVersion": "2026-09-01-preview",
+  "namePattern": "^[a-z0-9][a-z0-9-]{1,22}[a-z0-9]$",
+  "exampleSkuName": "AIGateway",
+  "createOnly": ["location", "properties.backend"],
+  "subnetDelegation": "Microsoft.App/environments",
+  "subnetRegion": "same as gateway",
+  "request": {
+    "type": "object",
+    "required": ["location", "properties"],
+    "properties": {
+      "location": {"type": "string"},
+      "tags": {"type": "object", "additionalProperties": {"type": "string"}},
+      "sku": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {"name": {"type": "string"}}
+      },
+      "identity": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {"type": "string", "enum": ["None", "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned"]},
+          "principalId": {"type": "string", "readOnly": true},
+          "tenantId": {"type": "string", "readOnly": true}
+        }
+      },
+      "properties": {
+        "type": "object",
+        "properties": {
+          "provisioningState": {"type": "string", "readOnly": true},
+          "frontend": {"type": "object", "readOnly": true},
+          "backend": {
+            "type": "object",
+            "properties": {
+              "subnet": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {"id": {"type": "string"}}
+              }
+            }
+          }
+        }
+      },
+      "id": {"type": "string", "readOnly": true},
+      "name": {"type": "string", "readOnly": true},
+      "type": {"type": "string", "readOnly": true},
+      "systemData": {"type": "object", "readOnly": true},
+      "eTag": {"type": "string", "readOnly": true}
+    }
+  }
+}

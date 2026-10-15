@@ -4,6 +4,10 @@
 
 Status: checked against public Microsoft Learn schemas and statically tested on 2026-10-14. **No live tenant compilation or execution was performed.** These are starting points for hunting, not production-ready detections or a supported agent discovery catalog.
 
+## Release status
+
+**Core pack: alpha. Preview graph extension: alpha.** Required capability lifecycles and live tenant evidence for the core remain unverified, so it is not beta eligible. The graph files depend on a preview surface but are not required by independently runnable core hunts. Neither profile is activated by deploying the Azure demo. See the [release policy and current profiles](../../../docs/release-policy.md).
+
 ## Prerequisites and availability
 
 - Separately license and deploy Microsoft Defender for Endpoint (MDE) with the endpoint telemetry and advanced hunting entitlement required by your tenant. Confirm the [current licensing and platform requirements](https://learn.microsoft.com/en-us/defender-endpoint/microsoft-defender-endpoint) rather than assuming every plan includes every hunting capability. The four `Device*Events` tables are MDE-backed and do not work/return data without that service.
