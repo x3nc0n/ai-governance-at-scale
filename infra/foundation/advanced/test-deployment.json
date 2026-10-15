@@ -1,0 +1,194 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "languageVersion": "2.0",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.44.1.10279",
+      "templateHash": "15790480011958615030"
+    }
+  },
+  "definitions": {
+    "testTags": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "parameters": {
+    "resourceGroupName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 90,
+      "metadata": {
+        "description": "New, isolated test resource group. Check that it does not already exist before deploying."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus2",
+      "allowedValues": [
+        "eastus2",
+        "swedencentral"
+      ],
+      "metadata": {
+        "description": "Approved gateway and resource group region."
+      }
+    },
+    "tags": {
+      "$ref": "#/definitions/testTags",
+      "defaultValue": {
+        "workload": "ai-governance",
+        "profile": "gateway-infrastructure-alpha-test"
+      },
+      "metadata": {
+        "description": "Nonsecret test ownership tags. Never include personal or tenant data."
+      }
+    }
+  },
+  "resources": {
+    "testGroup": {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2025-04-01",
+      "name": "[parameters('resourceGroupName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]"
+    },
+    "gateway": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "advanced-gateway",
+      "resourceGroup": "[parameters('resourceGroupName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "2.0",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.44.1.10279",
+              "templateHash": "7588523729560288015"
+            }
+          },
+          "definitions": {
+            "gatewayTags": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "eastus2",
+              "allowedValues": [
+                "eastus2",
+                "swedencentral"
+              ],
+              "metadata": {
+                "description": "Preview gateway region. Availability still depends on subscription enrollment and capacity."
+              }
+            },
+            "gatewayName": {
+              "type": "string",
+              "defaultValue": "[format('aigw-{0}', uniqueString(resourceGroup().id))]",
+              "minLength": 3,
+              "maxLength": 24,
+              "metadata": {
+                "description": "Gateway name: 3-24 lowercase letters, digits or hyphens; begin and end with a letter or digit. The resource provider enforces ^[a-z0-9][a-z0-9-]{1,22}[a-z0-9]$."
+              }
+            },
+            "tags": {
+              "$ref": "#/definitions/gatewayTags",
+              "defaultValue": {
+                "workload": "ai-governance",
+                "profile": "gateway-infrastructure-alpha"
+              },
+              "metadata": {
+                "description": "Nonsecret resource tags. Do not include personal or tenant data."
+              }
+            }
+          },
+          "resources": {
+            "gateway": {
+              "type": "Microsoft.ApiManagement/aigateways",
+              "apiVersion": "2026-09-01-preview",
+              "name": "[parameters('gatewayName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "sku": {
+                "name": "AIGateway"
+              },
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {}
+            }
+          },
+          "outputs": {
+            "gatewayResourceId": {
+              "type": "string",
+              "metadata": {
+                "description": "Resource ID of the gateway, not a runtime endpoint or proof of configured governance."
+              },
+              "value": "[resourceId('Microsoft.ApiManagement/aigateways', parameters('gatewayName'))]"
+            },
+            "gatewayResourceName": {
+              "type": "string",
+              "metadata": {
+                "description": "Gateway resource name."
+              },
+              "value": "[parameters('gatewayName')]"
+            },
+            "gatewayApiVersion": {
+              "type": "string",
+              "metadata": {
+                "description": "Pinned gateway management API version."
+              },
+              "value": "2026-09-01-preview"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "testGroup"
+      ]
+    }
+  },
+  "outputs": {
+    "resourceGroupName": {
+      "type": "string",
+      "value": "[parameters('resourceGroupName')]"
+    },
+    "gatewayResourceId": {
+      "type": "string",
+      "value": "[reference('gateway').outputs.gatewayResourceId.value]"
+    },
+    "gatewayResourceName": {
+      "type": "string",
+      "value": "[reference('gateway').outputs.gatewayResourceName.value]"
+    },
+    "gatewayApiVersion": {
+      "type": "string",
+      "value": "[reference('gateway').outputs.gatewayApiVersion.value]"
+    }
+  }
+}

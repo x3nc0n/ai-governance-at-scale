@@ -1,12 +1,26 @@
 # Azure Deployment Plan
 
-> **Status:** Prepared; offline validated only.
+> **Status:** Validated — isolated gateway test wrapper only; live deployment completion blocked by provider polling.
 >
-> **Current scope (2026-10-15):** Add a separate resource-group-scoped `Microsoft.ApiManagement/aigateways@2026-09-01-preview` Bicep/ARM entrypoint, Deploy to Azure button, static schema checks, and CI drift checks. Gateway infrastructure is a separate milestone from end-to-end governed alpha. No cloud validation or deployment is performed in this task.
+> **Current scope (2026-10-15):** Authorized live resource-only test of `Microsoft.ApiManagement/aigateways@2026-09-01-preview` in East US 2, using the checked-in subscription wrapper to create one new isolated group and its gateway. No legacy foundation, native clients, runtime policy, backend configuration, role assignments, keys or tenant consent changes. Target identifiers remain private runtime context.
 >
 > **Historical plan:** The earlier “Validated” status applied only to the historical foundation work below, not to the new gateway resource or advanced runtime governance.
 >
-> **Execution result:** Separate gateway Bicep, generated ARM, safe parameters, branch-bound Deploy to Azure button, pinned compile/drift CI and focused static tests are implemented. Bicep 0.44.1 compiles with BCP081 (preview resource types absent from its catalog); the writable shape is checked against a focused projection of the pinned REST specification. Ten gateway static tests and twelve demo regressions pass. No Azure validation, deployment, login or tenant changes were performed. Tool publication/policy interfaces, live networking, delegated clients, cloud Block-mode enforcement and full alpha acceptance remain pending.
+> **Execution result:** Actual subscription validation and create-only what-if succeeded; the checked-in wrapper was deployed. Normal ARM deployment registered `Microsoft.ApiManagement` and created the isolated group plus one gateway in East US 2. Gateway GET reports `Succeeded` with system identity and returned hostname (unauthenticated HTTPS 404). ARM deployments remain `Running` during observation: nested creation records `NoRegisteredProviderFound` for `locations/operationsStatuses@2026-09-01-preview`. Provider metadata confirms that polling version is not advertised. This is a cloud provider contract blocker, not a completed ARM deployment or a runtime-protection pass. No unrelated changes or unapproved cleanup.
+
+### Current live-test validation checklist
+
+- [x] All validation checks pass for the isolated test wrapper
+  - [x] Compile gateway and subscription wrapper using isolated Bicep 0.44.1; verify generated ARM drift.
+  - [x] Run `python -B scripts\test-advanced-gateway.py`.
+  - [x] Verify tenant and selected subscription with explicit `--subscription` on Azure commands.
+  - [x] Read provider metadata and check isolated resource group is absent.
+  - [x] Static RBAC review: resource-only gateway has no backend data-plane operations; no role assignments needed or emitted.
+  - [x] Retrieve assigned policies and run subscription-scope provider validation.
+  - [x] Run subscription-scope what-if; confirm only isolated creates.
+- [x] Invoke azure-deploy only after actual successful validation; submit checked-in wrapper and inspect operation/resource states.
+- [ ] Observe successful terminal ARM deployment (blocked by provider polling API mismatch).
+- [x] Leave one live gateway and its isolated group accounted for; no unapproved cleanup.
 
 Generated: 2026-08-04T18:41:00-05:00
 Last Updated: 2026-10-15
@@ -450,6 +464,45 @@ Scenario 04: https://portal.azure.com/#create/Microsoft.Template/uri/{encoded-ra
 
 ## 7. Validation Proof
 
+### Current isolated gateway test — 2026-10-15
+
+Commands use a private approved `$subscriptionId`, checked-in JSON, and `resourceGroupName=rg-aigov-alpha-gateway-test-8645a688 location=eastus2`. No target identifiers are stored here.
+
+| Check | Actual command | Observed result |
+|---|---|---|
+| Pinned compilation | Isolated `bicep-0.44.1.exe build` for `main.bicep` and `test-deployment.bicep` | Passed; expected BCP081 for gateway preview catalog; gateway ARM unchanged; repeated wrapper hash identical |
+| Static suite | `python -B scripts\test-advanced-gateway.py` | 11 tests passed, including nested-template equality and isolated scope |
+| Authentication | `az account show --subscription $subscriptionId` | Expected tenant matched; subscription Enabled; no global auth changes |
+| Availability | `az provider show --namespace Microsoft.ApiManagement --subscription $subscriptionId` | API `2026-09-01-preview`, `aigateways`, East US 2 advertised; provider NotRegistered |
+| Isolation | `az group exists --name rg-aigov-alpha-gateway-test-8645a688 --subscription $subscriptionId` | false before validation |
+| Assigned policies | `az policy assignment list --subscription $subscriptionId` | Three Defender database/data-protection assignments; no policy denial in remote validation/what-if |
+| Static roles | Review main gateway and wrapper resources | No backend/data-plane operation configured; no role assignment necessary or emitted |
+| Remote validation | `az deployment sub validate --subscription $subscriptionId --location eastus2 --name aigov-gateway-test-8645a688 --template-file infra\foundation\advanced\test-deployment.json --parameters resourceGroupName=rg-aigov-alpha-gateway-test-8645a688 location=eastus2 --only-show-errors -o json` | Exit 0, error null, provisioningState Succeeded; wrapper and gateway in validatedResources |
+| Remote what-if | Same scope/template/parameters with `az deployment sub what-if --result-format FullResourcePayloads --no-pretty-print` | Exit 0, status Succeeded, exactly two Create entries; no modifies/deletes/diagnostics |
+
+Raw correlation evidence is private session storage, not a repository artifact. This proves ARM preflight only, not runtime protection or service provisioning.
+
+### Current live execution proof — 2026-10-15
+
+| Check | Actual command | Observed result |
+|---|---|---|
+| Deployment | `az deployment sub create` using the same validated subscription, location, deployment name, JSON and parameters | Submitted after azure-deploy checklist; normal provider registration observed; not a terminal success |
+| Provider registration | `az provider show --namespace Microsoft.ApiManagement --subscription $subscriptionId` | Changed from NotRegistered to Registered during normal template deployment; no direct register command |
+| Nested create | `az deployment operation group list --subscription $subscriptionId --resource-group rg-aigov-alpha-gateway-test-8645a688 --name advanced-gateway` | Running with statusMessage Failed / NoRegisteredProviderFound: polling API `2026-09-01-preview` unavailable for `locations/operationsStatuses` in eastus2 |
+| Contract check | Provider resourceTypes for `aigateways` and `locations/operationsStatuses`; pinned REST spec directory inspection | Gateway API is advertised, polling API is not; no verified compatible older published gateway contract found. No guessed API downgrade |
+| Resource readback | `az resource show --subscription $subscriptionId --resource-group rg-aigov-alpha-gateway-test-8645a688 --resource-type Microsoft.ApiManagement/aigateways --name aigw-3a2mpy45dkqbu --api-version 2026-09-01-preview` | Succeeded; SystemAssigned identity; service returned frontend.defaultHostname; SKU absent in GET |
+| Endpoint response | `curl.exe --silent --show-error --max-time 30 --output NUL --write-out 'HTTP %{http_code}\n' <service-returned-https-url>` | HTTP 404 unauthenticated; no runtime/model/tool/protection verification |
+| Scoped inventory | `az resource list --subscription $subscriptionId --resource-group rg-aigov-alpha-gateway-test-8645a688` | Exactly one gateway in eastus2; no legacy APIM/foundation/client resources |
+| Read-only drift preview | Same wrapper what-if with a distinct readback deployment name | Succeeded; group NoChange, gateway Modify for GET-omitted SKU/read-only returned frontend; not clean idempotence; no reapply |
+
+**Live names:** group `rg-aigov-alpha-gateway-test-8645a688`, gateway `aigw-3a2mpy45dkqbu`, subscription deployment `aigov-gateway-test-8645a688`, nested deployment `advanced-gateway`. Keep provisioned pending follow-up; charges may apply. No delete/cancel operation authorized or run.
+
+**Unblock owner:** API Management resource-provider support must resolve/confirm the LRO status API registration/contract mismatch. Private session evidence includes exact errors and operation correlation; do not publish tenant/subscription/principal identifiers. After resolution, revalidate the checked-in template and monitor terminal completion; do not claim a successful deployment yet.
+
+The local CLI wait was stopped after the confirmed provider error persisted for more than ten minutes; this did **not** issue an Azure deployment cancellation or resource deletion. The cloud deployment still requires follow-up monitoring.
+
+### Historical foundation evidence — not current gateway proof
+
 | Check | Command | Result |
 |---|---|---|
 | Bicep compilation | `az bicep build --file infra/foundation/main.bicep` and the four scenario entrypoint Bicep files | Passed; generated `azuredeploy.json` files for the foundation and all four scenarios |
@@ -459,9 +512,9 @@ Scenario 04: https://portal.azure.com/#create/Microsoft.Template/uri/{encoded-ra
 
 ## 8. Next Steps
 
-> **Current: Approved — Phase 2 execution**
+> **Current gateway test:** Escalate the verified provider polling-contract blocker with private correlation evidence. Keep the isolated live gateway accounted for; no unapproved cleanup. Revalidate and observe terminal ARM completion after the provider issue is resolved.
 
-**→ Next action: Generate the foundation, scenario templates, documentation, teardown scripts, and CI workflow.**
+**Historical foundation next steps (not instructions to deploy additional resources in the current test):**
 
 After approval, execution proceeds:
 1. Generate foundation Bicep + compile ARM

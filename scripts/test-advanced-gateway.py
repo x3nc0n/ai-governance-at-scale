@@ -160,7 +160,29 @@ class AdvancedGatewayTests(unittest.TestCase):
         self.assertIn("--file infra/foundation/advanced/main.bicep --outfile infra/foundation/advanced/azuredeploy.json", build)
         drift = next(line for line in build.splitlines() if "git diff --exit-code" in line)
         self.assertIn("infra/foundation/advanced/azuredeploy.json", drift)
+        self.assertIn("--file infra/foundation/advanced/test-deployment.bicep --outfile infra/foundation/advanced/test-deployment.json", build)
+        self.assertIn("infra/foundation/advanced/test-deployment.json", drift)
         self.assertIn("python -B scripts/test-advanced-gateway.py", (ROOT / ".github" / "workflows" / "squad-ci.yml").read_text())
+
+    def test_subscription_wrapper_only_creates_isolated_group_and_gateway(self):
+        wrapper = json.loads((ENTRY / "test-deployment.json").read_text())
+        self.assertEqual(wrapper["$schema"], "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#")
+        self.assertEqual(wrapper["metadata"]["_generator"]["version"], "0.44.1.10279")
+        self.assertEqual(set(wrapper["resources"]), {"testGroup", "gateway"})
+        self.assertNotIn("defaultValue", wrapper["parameters"]["resourceGroupName"])
+        group = wrapper["resources"]["testGroup"]
+        self.assertEqual(group["type"], "Microsoft.Resources/resourceGroups")
+        self.assertEqual(group["name"], "[parameters('resourceGroupName')]")
+        self.assertEqual(group["tags"], "[parameters('tags')]")
+        module = wrapper["resources"]["gateway"]
+        self.assertEqual(module["type"], "Microsoft.Resources/deployments")
+        self.assertEqual(module["resourceGroup"], "[parameters('resourceGroupName')]")
+        self.assertEqual(module["dependsOn"], ["testGroup"])
+        self.assertEqual(module["properties"]["mode"], "Incremental")
+        self.assertEqual(module["properties"]["template"], TEMPLATE)
+        self.assertEqual(set(module["properties"]["parameters"]), {"location", "tags"})
+        self.assertNotRegex(json.dumps(wrapper), r"(?i)listKeys|listSecrets|roleAssignments|tenantId|principalId|password|clientSecret|accessToken|@")
+        self.assertNotRegex(json.dumps(wrapper), r"(?i)[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}")
 
 
 if __name__ == "__main__":
