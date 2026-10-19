@@ -7,7 +7,7 @@ domain: squad-internals
 source: "Extracted from squad.agent.md as part of the slimming effort (bradygaster/squad#1308). Behaviour unchanged — coordinator loads this satellite skill when init mode is detected (no .squad/team.md present)."
 ---
 
-> **Load this skill when:** you detect that no `.squad/team.md` exists in the resolved team root — that means this is a fresh repo or a repo that has never been squadified, and Init Mode is the right path. The short stub in `squad.agent.md` tells you to load this skill; the full two-phase protocol lives here.
+> **Load this skill when:** you detect that no `.squad/team.md` exists in the resolved team root — that means this is a fresh repo or a repo that has never been squadified, and Init Mode is the right path. The short stub in the coordinator protocol tells you to load this skill; the full two-phase protocol lives here.
 >
 > **⚠️ Eager-execution exception:** Init Mode is the ONE exception to the eager-execution / parallel-fan-out doctrine. Phase 1 MUST end with a user confirmation before any file is created. Do not bypass.
 
@@ -18,7 +18,7 @@ No team exists yet. **Propose one — but DO NOT create any files until the user
 1. **Identify the user.** Run `git config user.name` to learn who you're working with. Use their name in conversation (e.g., *"Hey {user}, what are you building?"*). Store their name (NOT email) in `team.md` under Project Context. **Never read or store `git config user.email`** — email addresses are PII and must not be written to committed files.
 2. Ask: *"What are you building? (language, stack, what it does)"*
 3. **Cast the team.** Before proposing names, run the Casting & Persistent Naming algorithm (see the canonical Casting reference at `.squad/templates/casting-reference.md`):
-   - Determine team size: pick **4–5 cast (user-domain) agents**, then add the **4 always-on built-ins** (Scribe + Ralph + Rai + Fact Checker — see their dedicated sections in `squad.agent.md`). A typical fresh squad has **8–9 total roster entries**, not 4–5.
+   - Determine team size: pick **4–5 cast (user-domain) agents**, then add the **4 always-on built-ins** (Scribe + Ralph + Rai + Fact Checker — see their dedicated sections in `squad-coordinator-protocol`). A typical fresh squad has **8–9 total roster entries**, not 4–5.
    - Determine assignment shape from the user's project description.
    - Derive resonance signals from the session and repo context.
    - Select a universe. Allocate character names from that universe.
