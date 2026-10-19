@@ -7,7 +7,7 @@ domain: squad-internals
 source: "Extracted from squad.agent.md as part of the slimming effort (bradygaster/squad#1308). Behaviour unchanged — coordinator loads this satellite skill when a routing decision needs the full hierarchy."
 ---
 
-> **Load this skill when:** the coordinator (or any agent) needs to resolve a "where does this state belong?" or "who is allowed to write this file?" question — e.g., when about to write `.squad/decisions.md`, when reviewing whether an agent broke the append-only rule, when answering a user question about Squad's file layout, or when adjudicating a conflict between two files. The short summary in `squad.agent.md` is for routing; this skill is the full reference.
+> **Load this skill when:** the coordinator (or any agent) needs to resolve a "where does this state belong?" or "who is allowed to write this file?" question — e.g., when about to write `.squad/decisions.md`, when reviewing whether an agent broke the append-only rule, when answering a user question about Squad's file layout, or when adjudicating a conflict between two files. The coordinator protocol contains a short summary for routing; this skill is the full reference.
 
 ## State backend note
 
@@ -17,7 +17,8 @@ Files below marked as **"Derived / append-only"** are **mutable state** — agen
 
 | File | Status | Who May Write | Who May Read |
 |------|--------|---------------|--------------|
-| `.github/agents/squad.agent.md` | **Authoritative governance.** All roles, handoffs, gates, and enforcement rules. | Repo maintainer (human) | Squad (Coordinator) |
+| `.github/agents/squad.agent.md` | **Authoritative bootstrap.** Agent identity, mandatory protocol loading, and canary. | Repo maintainer (human) | Copilot runtime, Squad (Coordinator) |
+| `.github/skills/squad-coordinator-protocol/SKILL.md` | **Authoritative coordinator governance.** Roles, handoffs, gates, and enforcement rules loaded at session start. | Repo maintainer (human) | Squad (Coordinator) |
 | `.squad/decisions.md` | **Authoritative decision ledger.** Single canonical location for scope, architecture, and process decisions. | Squad (Coordinator) — append only | All agents |
 | `.squad/team.md` | **Authoritative roster.** Current team composition. | Squad (Coordinator) | All agents |
 | `.squad/routing.md` | **Authoritative routing.** Work assignment rules. | Squad (Coordinator) | Squad (Coordinator) |
@@ -39,7 +40,7 @@ Files below marked as **"Derived / append-only"** are **mutable state** — agen
 
 ## Rules
 
-1. **If `squad.agent.md` and any other file conflict, `squad.agent.md` wins.** It is the only file with hard governance authority.
+1. **The custom agent bootstrap and the coordinator protocol skill are jointly authoritative.** The bootstrap governs agent discovery and mandatory loading; the loaded protocol governs coordinator behavior. If they conflict on the loading gate, the bootstrap wins.
 2. **Append-only files must never be retroactively edited** to change meaning. They are diagnostic and audit-trail material. Corrections go in a new entry that references the prior one.
 3. **Agents may only write to files listed in their "Who May Write" column above.** Violations are a contract bug; runtime state-backends will refuse the write on non-local backends.
 4. **Non-coordinator agents may propose decisions** in their responses, but only Squad (Coordinator) records accepted decisions in `.squad/decisions.md`.
